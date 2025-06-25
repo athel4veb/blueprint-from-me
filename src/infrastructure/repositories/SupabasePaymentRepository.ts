@@ -29,7 +29,29 @@ export class SupabasePaymentRepository implements IPaymentRepository {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Map snake_case database fields to camelCase domain entities
+    return (data || []).map(payment => ({
+      id: payment.id,
+      jobId: payment.job_id,
+      companyId: payment.company_id,
+      promoterId: payment.promoter_id,
+      amount: payment.amount,
+      status: payment.status as 'pending' | 'processing' | 'completed' | 'failed' | 'refunded',
+      paymentMethod: payment.payment_method,
+      stripePaymentIntentId: payment.stripe_payment_intent_id,
+      createdAt: payment.created_at,
+      updatedAt: payment.updated_at,
+      jobs: {
+        title: payment.jobs.title,
+        events: {
+          title: payment.jobs.events.title
+        }
+      },
+      promoter: {
+        full_name: payment.promoter.full_name
+      }
+    }));
   }
 
   async getPaymentSummary(companyId: string): Promise<PaymentSummary> {
