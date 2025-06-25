@@ -62,16 +62,16 @@ export class SupabaseWalletRepository implements IWalletRepository {
 
     if (error) throw error;
     
-    // Handle both possible response formats from the database function
-    if (data && 'total_earned' in data) {
+    // Always map to camelCase regardless of the response format
+    if (data) {
       return {
-        totalEarned: data.total_earned || 0,
-        pendingEarnings: data.pending_earnings || 0,
-        availableForPayout: data.available_for_payout || 0
+        totalEarned: data.total_earned || data.totalEarned || 0,
+        pendingEarnings: data.pending_earnings || data.pendingEarnings || 0,
+        availableForPayout: data.available_for_payout || data.availableForPayout || 0
       };
     }
     
-    return data || { totalEarned: 0, pendingEarnings: 0, availableForPayout: 0 };
+    return { totalEarned: 0, pendingEarnings: 0, availableForPayout: 0 };
   }
 
   async requestPayout(userId: string, amount: number, bankDetails: any): Promise<void> {
