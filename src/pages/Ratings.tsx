@@ -23,10 +23,10 @@ interface Rating {
       title: string;
     };
   };
-  rater: {
+  rater?: {
     full_name: string;
   };
-  rated: {
+  rated?: {
     full_name: string;
   };
 }
@@ -37,7 +37,7 @@ interface RatableJob {
   events: {
     title: string;
   };
-  job_applications: {
+  job_applications?: {
     promoter_id: string;
     status: string;
   }[];
@@ -123,7 +123,7 @@ const Ratings = () => {
           .select(`
             id,
             title,
-            events (title, companies (owner_id))
+            events (title)
           `)
           .eq('job_applications.promoter_id', profile.id)
           .eq('job_applications.status', 'approved');
@@ -194,8 +194,8 @@ const Ratings = () => {
     );
   };
 
-  const calculateAverageRating = () => {
-    if (ratingsReceived.length === 0) return 0;
+  const calculateAverageRating = (): string => {
+    if (ratingsReceived.length === 0) return "0";
     const sum = ratingsReceived.reduce((acc, rating) => acc + rating.rating, 0);
     return (sum / ratingsReceived.length).toFixed(1);
   };
@@ -316,7 +316,7 @@ const Ratings = () => {
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center space-x-2">
                         <User className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">{rating.rater.full_name}</span>
+                        <span className="font-medium">{rating.rater?.full_name}</span>
                       </div>
                       {renderStars(rating.rating)}
                     </div>
@@ -349,7 +349,7 @@ const Ratings = () => {
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center space-x-2">
                         <User className="w-4 h-4 text-gray-500" />
-                        <span className="font-medium">{rating.rated.full_name}</span>
+                        <span className="font-medium">{rating.rated?.full_name}</span>
                       </div>
                       {renderStars(rating.rating)}
                     </div>
