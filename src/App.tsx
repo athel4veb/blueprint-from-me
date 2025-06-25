@@ -17,6 +17,9 @@ import Wallet from "./pages/Wallet";
 import Ratings from "./pages/Ratings";
 import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
+import CompanyProfile from "./pages/CompanyProfile";
+import Training from "./pages/Training";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -93,6 +96,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/company-profile" 
+              element={
+                <ProtectedRoute requiredRole="company">
+                  <CompanyProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/training" 
+              element={
+                <ProtectedRoute>
+                  <Training />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminPanel />
                 </ProtectedRoute>
               } 
             />

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, Users, Star, Briefcase, Wallet, CreditCard, User } from "lucide-react";
+import { Calendar, Users, Star, Briefcase, Wallet, CreditCard, User, Building, GraduationCap, Shield } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ const Index = () => {
       { label: "Dashboard", path: "/dashboard" },
       { label: "Browse Jobs", path: "/jobs" },
       { label: "My Profile", path: "/profile" },
+      { label: "Training & Certification", path: "/training" },
       { label: "Ratings & Reviews", path: "/ratings" }
     ];
 
@@ -23,9 +24,12 @@ const Index = () => {
       baseButtons.push({ label: "My Wallet", path: "/wallet" });
     } else if (profile.user_type === 'company') {
       baseButtons.push(
+        { label: "Company Profile", path: "/company-profile" },
         { label: "Manage Jobs", path: "/manage-jobs" },
         { label: "Payments", path: "/payments" }
       );
+    } else if (profile.user_type === 'supervisor') {
+      baseButtons.push({ label: "Admin Panel", path: "/admin" });
     }
 
     return (
@@ -162,6 +166,42 @@ const Index = () => {
             <CardContent>
               <CardDescription>
                 Streamlined payment processing and financial tracking for companies
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Building className="h-12 w-12 text-red-600 mx-auto mb-4" />
+              <CardTitle>Company Profiles</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Showcase your brand and build trust with comprehensive company profiles
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <GraduationCap className="h-12 w-12 text-pink-600 mx-auto mb-4" />
+              <CardTitle>Training & Certification</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Enhance skills and earn certifications to unlock better opportunities
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Shield className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+              <CardTitle>Admin Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Comprehensive platform oversight and management tools for administrators
               </CardDescription>
             </CardContent>
           </Card>
