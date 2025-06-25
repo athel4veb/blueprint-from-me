@@ -16,6 +16,7 @@ import ManageJobs from "./pages/ManageJobs";
 import Wallet from "./pages/Wallet";
 import Ratings from "./pages/Ratings";
 import Payments from "./pages/Payments";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="company">
                   <Payments />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               } 
             />

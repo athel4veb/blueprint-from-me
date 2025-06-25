@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, Users, Star, Briefcase, Wallet, CreditCard } from "lucide-react";
+import { Calendar, Users, Star, Briefcase, Wallet, CreditCard, User } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ const Index = () => {
     const baseButtons = [
       { label: "Dashboard", path: "/dashboard" },
       { label: "Browse Jobs", path: "/jobs" },
+      { label: "My Profile", path: "/profile" },
       { label: "Ratings & Reviews", path: "/ratings" }
     ];
 
