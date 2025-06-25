@@ -65,9 +65,9 @@ export class SupabaseWalletRepository implements IWalletRepository {
     // Always map to camelCase regardless of the response format
     if (data) {
       return {
-        totalEarned: data.total_earned || data.totalEarned || 0,
-        pendingEarnings: data.pending_earnings || data.pendingEarnings || 0,
-        availableForPayout: data.available_for_payout || data.availableForPayout || 0
+        totalEarned: data.total_earned || 0,
+        pendingEarnings: data.pending_earnings || 0,
+        availableForPayout: data.available_for_payout || 0
       };
     }
     
