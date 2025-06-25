@@ -10,6 +10,9 @@ import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Dashboard from "./pages/Dashboard";
+import Jobs from "./pages/Jobs";
+import JobDetails from "./pages/JobDetails";
+import ManageJobs from "./pages/ManageJobs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +33,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/jobs" 
+              element={
+                <ProtectedRoute>
+                  <Jobs />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/jobs/:id" 
+              element={
+                <ProtectedRoute>
+                  <JobDetails />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/manage-jobs" 
+              element={
+                <ProtectedRoute requiredRole="company">
+                  <ManageJobs />
                 </ProtectedRoute>
               } 
             />

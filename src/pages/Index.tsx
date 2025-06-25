@@ -1,133 +1,147 @@
 
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Calendar, Users, Star, Briefcase } from "lucide-react";
 
 const Index = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
-
-  if (user) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+      {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <Briefcase className="h-8 w-8 text-blue-600" />
             <h1 className="text-2xl font-bold text-gray-900">EventStaff Pro</h1>
-            <div className="space-x-4">
-              <Link to="/auth/login">
-                <Button variant="outline">Sign In</Button>
-              </Link>
-              <Link to="/auth/register">
-                <Button>Get Started</Button>
-              </Link>
-            </div>
+          </div>
+          <div className="space-x-4">
+            {user ? (
+              <Button onClick={() => navigate('/dashboard')}>
+                Go to Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => navigate('/auth/login')}>
+                  Sign In
+                </Button>
+                <Button onClick={() => navigate('/auth/register')}>
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Connect Events with Top Talent
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            The leading platform for event staffing. Companies post jobs, promoters apply, 
-            and we handle everything from matching to payments.
+      {/* Hero Section */}
+      <section className="max-w-7xl mx-auto px-6 py-20 text-center">
+        <h2 className="text-5xl font-bold text-gray-900 mb-6">
+          Connect Events with Perfect Staff
+        </h2>
+        <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          The premier platform connecting event companies with talented promoters, models, and supervisors. 
+          Find your next opportunity or hire the perfect team for your event.
+        </p>
+        <div className="space-x-4">
+          <Button size="lg" onClick={() => navigate('/jobs')}>
+            Browse Jobs
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => navigate('/auth/register')}>
+            Join Our Network
+          </Button>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="max-w-7xl mx-auto px-6 py-16">
+        <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          Everything You Need in One Platform
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <Card className="text-center">
+            <CardHeader>
+              <Calendar className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <CardTitle>Event Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Create and manage events with detailed job postings and requirements
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Users className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <CardTitle>Talent Pool</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Access a network of qualified promoters, models, and supervisors
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Star className="h-12 w-12 text-purple-600 mx-auto mb-4" />
+              <CardTitle>Rating System</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Build trust with comprehensive ratings and feedback system
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Briefcase className="h-12 w-12 text-orange-600 mx-auto mb-4" />
+              <CardTitle>Job Matching</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Smart matching system connects the right talent with the right events
+              </CardDescription>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="bg-blue-600 text-white py-16">
+        <div className="max-w-4xl mx-auto text-center px-6">
+          <h3 className="text-3xl font-bold mb-4">Ready to Get Started?</h3>
+          <p className="text-xl mb-8">
+            Join thousands of event professionals already using EventStaff Pro
           </p>
           <div className="space-x-4">
-            <Link to="/auth/register">
-              <Button size="lg" className="px-8 py-3">
-                Join as Promoter
-              </Button>
-            </Link>
-            <Link to="/auth/register">
-              <Button size="lg" variant="outline" className="px-8 py-3">
-                Post Jobs
-              </Button>
-            </Link>
+            <Button size="lg" variant="secondary" onClick={() => navigate('/auth/register')}>
+              Sign Up Now
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => navigate('/jobs')}>
+              Browse Opportunities
+            </Button>
           </div>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          <Card>
-            <CardHeader>
-              <CardTitle>For Promoters</CardTitle>
-              <CardDescription>
-                Find flexible event work that fits your schedule
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Browse available jobs by location</li>
-                <li>• Apply with one click</li>
-                <li>• Get paid securely after completion</li>
-                <li>• Build your reputation with ratings</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>For Companies</CardTitle>
-              <CardDescription>
-                Staff your events with qualified promoters
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Post jobs in minutes</li>
-                <li>• Review applications and ratings</li>
-                <li>• Manage multiple locations</li>
-                <li>• Track performance and payments</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>For Supervisors</CardTitle>
-              <CardDescription>
-                Oversee teams and manage event operations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-2 text-sm text-gray-600">
-                <li>• Monitor team performance</li>
-                <li>• Submit daily reports</li>
-                <li>• Coordinate with promoters</li>
-                <li>• Ensure quality standards</li>
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Ready to get started?
-          </h2>
-          <p className="text-lg text-gray-600 mb-8">
-            Join thousands of promoters and companies already using our platform
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Briefcase className="h-6 w-6" />
+            <span className="text-xl font-bold">EventStaff Pro</span>
+          </div>
+          <p className="text-gray-400">
+            Connecting events with perfect staff since 2024
           </p>
-          <Link to="/auth/register">
-            <Button size="lg" className="px-8 py-3">
-              Create Your Account
-            </Button>
-          </Link>
         </div>
-      </main>
+      </footer>
     </div>
   );
 };
