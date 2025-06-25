@@ -1,124 +1,24 @@
-
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Clock, CheckCircle, XCircle, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-interface Payment {
-  id: string;
-  amount: number;
-  status: string;
-  payment_method: string;
-  created_at: string;
-  jobs: {
-    title: string;
-    events: {
-      title: string;
-    };
-  };
-  promoter: {
-    full_name: string;
-  };
-}
-
-interface PaymentSummary {
-  total_paid: number;
-  pending_payments: number;
-  failed_payments: number;
-}
+import { usePayments } from '@/presentation/hooks/usePayments';
 
 const Payments = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [summary, setSummary] = useState<PaymentSummary>({
-    total_paid: 0,
-    pending_payments: 0,
-    failed_payments: 0
-  });
-  const [loading, setLoading] = useState(true);
+  const { payments, summary, loading, error, processPayment } = usePayments(profile?.id || '');
 
-  useEffect(() => {
-    if (profile?.id && profile.user_type === 'company') {
-      fetchPayments();
-    }
-  }, [profile]);
-
-  const fetchPayments = async () => {
+  const handleProcessPayment = async (paymentId: string) => {
     try {
-      // Get the company owned by this user
-      const { data: company, error: companyError } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('owner_id', profile?.id)
-        .single();
-
-      if (companyError) throw companyError;
-
-      // Fetch payments for this company
-      const { data, error } = await supabase
-        .from('payments')
-        .select(`
-          *,
-          jobs (
-            title,
-            events (title)
-          ),
-          promoter:profiles!payments_promoter_id_fkey (full_name)
-        `)
-        .eq('company_id', company.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setPayments(data || []);
-
-      // Calculate summary
-      const totalPaid = data?.reduce((sum, p) => 
-        p.status === 'completed' ? sum + p.amount : sum, 0) || 0;
-      const pendingPayments = data?.reduce((sum, p) => 
-        p.status === 'pending' ? sum + p.amount : sum, 0) || 0;
-      const failedPayments = data?.reduce((sum, p) => 
-        p.status === 'failed' ? sum + p.amount : sum, 0) || 0;
-
-      setSummary({
-        total_paid: totalPaid,
-        pending_payments: pendingPayments,
-        failed_payments: failedPayments
-      });
-
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load payment data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const processPayment = async (paymentId: string) => {
-    try {
-      const { error } = await supabase
-        .from('payments')
-        .update({ status: 'processing' })
-        .eq('id', paymentId);
-
-      if (error) throw error;
-
+      await processPayment(paymentId);
       toast({
         title: "Success",
         description: "Payment is being processed",
       });
-
-      fetchPayments();
     } catch (error) {
       toast({
         title: "Error",
@@ -177,6 +77,17 @@ const Payments = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Error</h1>
+          <p className="text-gray-600">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
@@ -196,7 +107,7 @@ const Payments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600">
-                ${summary.total_paid.toFixed(2)}
+                ${summary.totalPaid.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -210,7 +121,7 @@ const Payments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-yellow-600">
-                ${summary.pending_payments.toFixed(2)}
+                ${summary.pendingPayments.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -224,7 +135,7 @@ const Payments = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-red-600">
-                ${summary.failed_payments.toFixed(2)}
+                ${summary.failedPayments.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -275,17 +186,17 @@ const Payments = () => {
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <CreditCard className="w-4 h-4 text-gray-500" />
-                        {payment.payment_method || 'Bank Transfer'}
+                        {payment.paymentMethod || 'Bank Transfer'}
                       </div>
                     </TableCell>
                     <TableCell>
-                      {new Date(payment.created_at).toLocaleDateString()}
+                      {new Date(payment.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
                       {payment.status === 'pending' && (
                         <Button
                           size="sm"
-                          onClick={() => processPayment(payment.id)}
+                          onClick={() => handleProcessPayment(payment.id)}
                         >
                           Process
                         </Button>
