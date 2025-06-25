@@ -13,6 +13,9 @@ import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
 import ManageJobs from "./pages/ManageJobs";
+import Wallet from "./pages/Wallet";
+import Ratings from "./pages/Ratings";
+import Payments from "./pages/Payments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -57,6 +60,30 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="company">
                   <ManageJobs />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/wallet" 
+              element={
+                <ProtectedRoute requiredRole="promoter">
+                  <Wallet />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/ratings" 
+              element={
+                <ProtectedRoute>
+                  <Ratings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/payments" 
+              element={
+                <ProtectedRoute requiredRole="company">
+                  <Payments />
                 </ProtectedRoute>
               } 
             />

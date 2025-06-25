@@ -201,6 +201,108 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          company_id: string | null
+          created_at: string | null
+          id: string
+          job_id: string | null
+          payment_method: string | null
+          promoter_id: string | null
+          status: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          job_id?: string | null
+          payment_method?: string | null
+          promoter_id?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          job_id?: string | null
+          payment_method?: string | null
+          promoter_id?: string | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_promoter_id_fkey"
+            columns: ["promoter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payout_requests: {
+        Row: {
+          amount: number
+          bank_details: Json | null
+          id: string
+          notes: string | null
+          processed_at: string | null
+          promoter_id: string | null
+          requested_at: string | null
+          status: string | null
+        }
+        Insert: {
+          amount: number
+          bank_details?: Json | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          promoter_id?: string | null
+          requested_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_details?: Json | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          promoter_id?: string | null
+          requested_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_requests_promoter_id_fkey"
+            columns: ["promoter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -290,6 +392,7 @@ export type Database = {
           description: string | null
           id: string
           job_id: string | null
+          payment_id: string | null
           status: string | null
           type: string
           wallet_id: string | null
@@ -300,6 +403,7 @@ export type Database = {
           description?: string | null
           id?: string
           job_id?: string | null
+          payment_id?: string | null
           status?: string | null
           type: string
           wallet_id?: string | null
@@ -310,6 +414,7 @@ export type Database = {
           description?: string | null
           id?: string
           job_id?: string | null
+          payment_id?: string | null
           status?: string | null
           type?: string
           wallet_id?: string | null
@@ -320,6 +425,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_transactions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
             referencedColumns: ["id"]
           },
           {
@@ -371,7 +483,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_promoter_earnings: {
+        Args: { promoter_uuid: string }
+        Returns: {
+          total_earned: number
+          pending_earnings: number
+          available_for_payout: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

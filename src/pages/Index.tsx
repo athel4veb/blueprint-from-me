@@ -3,11 +3,44 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, Users, Star, Briefcase } from "lucide-react";
+import { Calendar, Users, Star, Briefcase, Wallet, CreditCard } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+
+  const getDashboardNavigation = () => {
+    if (!user || !profile) return null;
+
+    const baseButtons = [
+      { label: "Dashboard", path: "/dashboard" },
+      { label: "Browse Jobs", path: "/jobs" },
+      { label: "Ratings & Reviews", path: "/ratings" }
+    ];
+
+    if (profile.user_type === 'promoter') {
+      baseButtons.push({ label: "My Wallet", path: "/wallet" });
+    } else if (profile.user_type === 'company') {
+      baseButtons.push(
+        { label: "Manage Jobs", path: "/manage-jobs" },
+        { label: "Payments", path: "/payments" }
+      );
+    }
+
+    return (
+      <div className="flex flex-wrap gap-2">
+        {baseButtons.map((button) => (
+          <Button
+            key={button.path}
+            variant="outline"
+            onClick={() => navigate(button.path)}
+          >
+            {button.label}
+          </Button>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
@@ -20,9 +53,7 @@ const Index = () => {
           </div>
           <div className="space-x-4">
             {user ? (
-              <Button onClick={() => navigate('/dashboard')}>
-                Go to Dashboard
-              </Button>
+              getDashboardNavigation()
             ) : (
               <>
                 <Button variant="outline" onClick={() => navigate('/auth/login')}>
@@ -61,7 +92,7 @@ const Index = () => {
         <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">
           Everything You Need in One Platform
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <Card className="text-center">
             <CardHeader>
               <Calendar className="h-12 w-12 text-blue-600 mx-auto mb-4" />
@@ -106,6 +137,30 @@ const Index = () => {
             <CardContent>
               <CardDescription>
                 Smart matching system connects the right talent with the right events
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <Wallet className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
+              <CardTitle>Wallet System</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Secure payment processing and earnings management for promoters
+              </CardDescription>
+            </CardContent>
+          </Card>
+
+          <Card className="text-center">
+            <CardHeader>
+              <CreditCard className="h-12 w-12 text-teal-600 mx-auto mb-4" />
+              <CardTitle>Payment Management</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>
+                Streamlined payment processing and financial tracking for companies
               </CardDescription>
             </CardContent>
           </Card>
