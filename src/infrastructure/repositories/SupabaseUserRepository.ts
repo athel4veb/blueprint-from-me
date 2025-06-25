@@ -4,6 +4,18 @@ import { IUserRepository } from '@/domain/repositories/IUserRepository';
 import { User } from '@/domain/entities/User';
 
 export class SupabaseUserRepository implements IUserRepository {
+  private mapToUser(profile: any): User {
+    return {
+      id: profile.id,
+      fullName: profile.full_name,
+      phone: profile.phone,
+      userType: profile.user_type as 'promoter' | 'company' | 'supervisor',
+      avatarUrl: profile.avatar_url,
+      createdAt: profile.created_at,
+      updatedAt: profile.updated_at
+    };
+  }
+
   async getCurrentUser(): Promise<User | null> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -16,15 +28,7 @@ export class SupabaseUserRepository implements IUserRepository {
 
     if (!profile) return null;
 
-    return {
-      id: profile.id,
-      fullName: profile.full_name,
-      phone: profile.phone,
-      userType: profile.user_type,
-      avatarUrl: profile.avatar_url,
-      createdAt: profile.created_at,
-      updatedAt: profile.updated_at
-    };
+    return this.mapToUser(profile);
   }
 
   async getUserById(id: string): Promise<User | null> {
@@ -36,25 +40,18 @@ export class SupabaseUserRepository implements IUserRepository {
 
     if (!profile) return null;
 
-    return {
-      id: profile.id,
-      fullName: profile.full_name,
-      phone: profile.phone,
-      userType: profile.user_type,
-      avatarUrl: profile.avatar_url,
-      createdAt: profile.created_at,
-      updatedAt: profile.updated_at
-    };
+    return this.mapToUser(profile);
   }
 
   async updateUser(user: Partial<User>): Promise<void> {
+    const updateData: any = {};
+    if (user.fullName !== undefined) updateData.full_name = user.fullName;
+    if (user.phone !== undefined) updateData.phone = user.phone;
+    if (user.avatarUrl !== undefined) updateData.avatar_url = user.avatarUrl;
+
     await supabase
       .from('profiles')
-      .update({
-        full_name: user.fullName,
-        phone: user.phone,
-        avatar_url: user.avatarUrl
-      })
+      .update(updateData)
       .eq('id', user.id);
   }
 }
