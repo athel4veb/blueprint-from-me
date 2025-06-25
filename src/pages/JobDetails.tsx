@@ -6,41 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { Calendar, MapPin, Clock, DollarSign, Users, ArrowLeft, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface JobDetails {
-  id: string;
-  title: string;
-  description: string;
-  requirements: string;
-  positions_available: number;
-  positions_filled: number;
-  hourly_rate: number;
-  shift_start: string;
-  shift_end: string;
-  status: string;
-  events: {
-    title: string;
-    description: string;
-    location: string;
-    start_date: string;
-    end_date: string;
-    companies: {
-      name: string;
-      description: string;
-      website: string;
-    };
-  };
-}
+import { useJobs } from '@/presentation/hooks/useJobs';
+import { Job } from '@/domain/entities/Job';
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { profile } = useAuth();
   const { toast } = useToast();
-  const [job, setJob] = useState<JobDetails | null>(null);
+  const { getJobById, applyForJob } = useJobs();
+  const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasApplied, setHasApplied] = useState(false);
   const [applying, setApplying] = useState(false);
@@ -48,36 +25,15 @@ const JobDetails = () => {
   useEffect(() => {
     if (id) {
       fetchJobDetails();
-      checkApplicationStatus();
     }
-  }, [id, profile]);
+  }, [id]);
 
   const fetchJobDetails = async () => {
     try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select(`
-          *,
-          events (
-            title,
-            description,
-            location,
-            start_date,
-            end_date,
-            companies (
-              name,
-              description,
-              website
-            )
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      setJob(data);
+      setLoading(true);
+      const jobData = await getJobById(id!);
+      setJob(jobData);
     } catch (error) {
-      console.error('Error fetching job details:', error);
       toast({
         title: "Error",
         description: "Failed to load job details",
@@ -88,60 +44,25 @@ const JobDetails = () => {
     }
   };
 
-  const checkApplicationStatus = async () => {
-    if (!profile?.id || !id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('job_applications')
-        .select('id')
-        .eq('job_id', id)
-        .eq('promoter_id', profile.id)
-        .single();
-
-      if (data) {
-        setHasApplied(true);
-      }
-    } catch (error) {
-      // No application found, which is fine
-    }
-  };
-
-  const applyForJob = async () => {
+  const handleApplyForJob = async () => {
     if (!profile?.id || !id) return;
 
     setApplying(true);
     try {
-      const { error } = await supabase
-        .from('job_applications')
-        .insert({
-          job_id: id,
-          promoter_id: profile.id,
-          status: 'pending'
-        });
-
-      if (error) throw error;
-      
+      await applyForJob(id, profile.id);
       toast({
         title: "Success",
         description: "Application submitted successfully!",
       });
-      
       setHasApplied(true);
     } catch (error: any) {
-      if (error.code === '23505') {
-        toast({
-          title: "Already Applied",
-          description: "You have already applied for this job",
-          variant: "destructive",
-        });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+      if (error.message.includes('already applied')) {
         setHasApplied(true);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to submit application",
-          variant: "destructive",
-        });
       }
     } finally {
       setApplying(false);
@@ -167,6 +88,8 @@ const JobDetails = () => {
     );
   }
 
+  const jobWithEvents = job as any;
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
@@ -187,10 +110,10 @@ const JobDetails = () => {
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-2xl">{job.title}</CardTitle>
-                    <CardDescription className="text-lg">{job.events.title}</CardDescription>
+                    <CardDescription className="text-lg">{jobWithEvents.events?.title}</CardDescription>
                   </div>
                   <Badge variant="secondary">
-                    {job.positions_available - job.positions_filled} positions left
+                    {job.positionsAvailable - job.positionsFilled} positions left
                   </Badge>
                 </div>
               </CardHeader>
@@ -198,27 +121,27 @@ const JobDetails = () => {
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="flex items-center text-sm text-gray-600">
                     <MapPin className="w-4 h-4 mr-2" />
-                    {job.events.location}
+                    {jobWithEvents.events?.location}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Clock className="w-4 h-4 mr-2" />
-                    {job.shift_start} - {job.shift_end}
+                    {job.shiftStart} - {job.shiftEnd}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <DollarSign className="w-4 h-4 mr-2" />
-                    ${job.hourly_rate}/hour
+                    ${job.hourlyRate}/hour
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Users className="w-4 h-4 mr-2" />
-                    {job.positions_available} positions total
+                    {job.positionsAvailable} positions total
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Calendar className="w-4 h-4 mr-2" />
-                    {new Date(job.events.start_date).toLocaleDateString()}
+                    {jobWithEvents.events?.start_date && new Date(jobWithEvents.events.start_date).toLocaleDateString()}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Building className="w-4 h-4 mr-2" />
-                    {job.events.companies.name}
+                    {jobWithEvents.events?.companies?.name}
                   </div>
                 </div>
 
@@ -239,10 +162,10 @@ const JobDetails = () => {
 
                   <div>
                     <h3 className="text-lg font-semibold mb-2">Event Details</h3>
-                    <p className="text-gray-700">{job.events.description}</p>
+                    <p className="text-gray-700">{jobWithEvents.events?.description}</p>
                     <div className="mt-2 text-sm text-gray-600">
-                      <p>Start: {new Date(job.events.start_date).toLocaleString()}</p>
-                      <p>End: {new Date(job.events.end_date).toLocaleString()}</p>
+                      <p>Start: {jobWithEvents.events?.start_date && new Date(jobWithEvents.events.start_date).toLocaleString()}</p>
+                      <p>End: {jobWithEvents.events?.end_date && new Date(jobWithEvents.events.end_date).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -258,11 +181,11 @@ const JobDetails = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <h4 className="font-semibold">{job.events.companies.name}</h4>
-                  <p className="text-sm text-gray-600">{job.events.companies.description}</p>
-                  {job.events.companies.website && (
+                  <h4 className="font-semibold">{jobWithEvents.events?.companies?.name}</h4>
+                  <p className="text-sm text-gray-600">{jobWithEvents.events?.companies?.description}</p>
+                  {jobWithEvents.events?.companies?.website && (
                     <a 
-                      href={job.events.companies.website} 
+                      href={jobWithEvents.events.companies.website} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:underline text-sm"
@@ -293,7 +216,7 @@ const JobDetails = () => {
                         Ready to join this event? Submit your application now!
                       </p>
                       <Button 
-                        onClick={applyForJob}
+                        onClick={handleApplyForJob}
                         disabled={applying}
                         className="w-full"
                       >

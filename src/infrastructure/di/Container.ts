@@ -1,30 +1,33 @@
 
+import { SupabaseUserRepository } from '../repositories/SupabaseUserRepository';
+import { SupabaseJobRepository } from '../repositories/SupabaseJobRepository';
+import { SupabaseWalletRepository } from '../repositories/SupabaseWalletRepository';
+import { SupabaseRatingRepository } from '../repositories/SupabaseRatingRepository';
 import { GetCurrentUserUseCase } from '@/application/usecases/auth/GetCurrentUserUseCase';
-import { GetAvailableJobsUseCase } from '@/application/usecases/jobs/GetAvailableJobsUseCase';
-import { ApplyForJobUseCase } from '@/application/usecases/jobs/ApplyForJobUseCase';
-import { GetRatingsUseCase } from '@/application/usecases/ratings/GetRatingsUseCase';
-import { SubmitRatingUseCase } from '@/application/usecases/ratings/SubmitRatingUseCase';
-import { GetWalletDataUseCase } from '@/application/usecases/wallet/GetWalletDataUseCase';
-
-import { SupabaseUserRepository } from '@/infrastructure/repositories/SupabaseUserRepository';
-import { SupabaseJobRepository } from '@/infrastructure/repositories/SupabaseJobRepository';
-import { SupabaseRatingRepository } from '@/infrastructure/repositories/SupabaseRatingRepository';
-import { SupabaseWalletRepository } from '@/infrastructure/repositories/SupabaseWalletRepository';
+import { JobService } from '@/application/services/JobService';
+import { WalletService } from '@/application/services/WalletService';
+import { RatingService } from '@/application/services/RatingService';
 
 class Container {
   // Repositories
-  private userRepository = new SupabaseUserRepository();
-  private jobRepository = new SupabaseJobRepository();
-  private ratingRepository = new SupabaseRatingRepository();
-  private walletRepository = new SupabaseWalletRepository();
+  private _userRepository = new SupabaseUserRepository();
+  private _jobRepository = new SupabaseJobRepository();
+  private _walletRepository = new SupabaseWalletRepository();
+  private _ratingRepository = new SupabaseRatingRepository();
 
   // Use Cases
-  getCurrentUserUseCase = new GetCurrentUserUseCase(this.userRepository);
-  getAvailableJobsUseCase = new GetAvailableJobsUseCase(this.jobRepository);
-  applyForJobUseCase = new ApplyForJobUseCase(this.jobRepository);
-  getRatingsUseCase = new GetRatingsUseCase(this.ratingRepository);
-  submitRatingUseCase = new SubmitRatingUseCase(this.ratingRepository);
-  getWalletDataUseCase = new GetWalletDataUseCase(this.walletRepository);
+  public readonly getCurrentUserUseCase = new GetCurrentUserUseCase(this._userRepository);
+
+  // Services
+  public readonly jobService = new JobService(this._jobRepository);
+  public readonly walletService = new WalletService(this._walletRepository);
+  public readonly ratingService = new RatingService(this._ratingRepository);
+
+  // Getters for repositories (if needed for specific use cases)
+  get userRepository() { return this._userRepository; }
+  get jobRepository() { return this._jobRepository; }
+  get walletRepository() { return this._walletRepository; }
+  get ratingRepository() { return this._ratingRepository; }
 }
 
 export const container = new Container();

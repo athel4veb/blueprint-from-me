@@ -1,149 +1,45 @@
 
-import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { DollarSign, CreditCard, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-
-interface WalletData {
-  balance: number;
-  pending_balance: number;
-}
-
-interface Transaction {
-  id: string;
-  type: string;
-  amount: number;
-  description: string;
-  status: string;
-  created_at: string;
-}
-
-interface PayoutRequest {
-  id: string;
-  amount: number;
-  status: string;
-  requested_at: string;
-  processed_at: string | null;
-  notes: string | null;
-}
+import { useWallet } from '@/presentation/hooks/useWallet';
+import { useState } from 'react';
 
 const Wallet = () => {
   const { profile } = useAuth();
   const { toast } = useToast();
-  const [wallet, setWallet] = useState<WalletData | null>(null);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [payoutRequests, setPayoutRequests] = useState<PayoutRequest[]>([]);
   const [payoutAmount, setPayoutAmount] = useState('');
   const [bankDetails, setBankDetails] = useState('');
-  const [loading, setLoading] = useState(true);
+  
+  const {
+    wallet,
+    transactions,
+    payoutRequests,
+    earnings,
+    loading,
+    error,
+    requestPayout
+  } = useWallet(profile?.id || '');
 
-  useEffect(() => {
-    if (profile?.id) {
-      fetchWalletData();
-      fetchTransactions();
-      fetchPayoutRequests();
-    }
-  }, [profile]);
-
-  const fetchWalletData = async () => {
+  const handleRequestPayout = async () => {
     try {
-      const { data, error } = await supabase
-        .from('wallets')
-        .select('balance, pending_balance')
-        .eq('user_id', profile?.id)
-        .single();
-
-      if (error) throw error;
-      setWallet(data);
-    } catch (error) {
-      console.error('Error fetching wallet:', error);
-    }
-  };
-
-  const fetchTransactions = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('wallet_transactions')
-        .select('*')
-        .eq('wallet_id', (await supabase.from('wallets').select('id').eq('user_id', profile?.id).single()).data?.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setTransactions(data || []);
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-    }
-  };
-
-  const fetchPayoutRequests = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('payout_requests')
-        .select('*')
-        .eq('promoter_id', profile?.id)
-        .order('requested_at', { ascending: false });
-
-      if (error) throw error;
-      setPayoutRequests(data || []);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching payout requests:', error);
-      setLoading(false);
-    }
-  };
-
-  const requestPayout = async () => {
-    if (!payoutAmount || !bankDetails) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const amount = parseFloat(payoutAmount);
-    if (amount > (wallet?.balance || 0)) {
-      toast({
-        title: "Error",
-        description: "Insufficient balance",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('payout_requests')
-        .insert({
-          promoter_id: profile?.id,
-          amount: amount,
-          bank_details: { details: bankDetails },
-          status: 'pending'
-        });
-
-      if (error) throw error;
-
+      await requestPayout(parseFloat(payoutAmount), bankDetails);
       toast({
         title: "Success",
         description: "Payout request submitted successfully",
       });
-
       setPayoutAmount('');
       setBankDetails('');
-      fetchPayoutRequests();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to submit payout request",
+        description: error.message,
         variant: "destructive",
       });
     }
@@ -153,6 +49,17 @@ const Wallet = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading wallet...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error Loading Wallet</h1>
+          <p className="text-gray-600">{error}</p>
+        </div>
       </div>
     );
   }
@@ -176,7 +83,7 @@ const Wallet = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-green-600">
-                ${wallet?.balance?.toFixed(2) || '0.00'}
+                ${earnings.availableForPayout.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -190,7 +97,7 @@ const Wallet = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-yellow-600">
-                ${wallet?.pending_balance?.toFixed(2) || '0.00'}
+                ${earnings.pendingEarnings.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -204,7 +111,7 @@ const Wallet = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-blue-600">
-                ${((wallet?.balance || 0) + (wallet?.pending_balance || 0)).toFixed(2)}
+                ${earnings.totalEarned.toFixed(2)}
               </div>
             </CardContent>
           </Card>
@@ -225,7 +132,7 @@ const Wallet = () => {
                   placeholder="Enter amount"
                   value={payoutAmount}
                   onChange={(e) => setPayoutAmount(e.target.value)}
-                  max={wallet?.balance || 0}
+                  max={earnings.availableForPayout}
                 />
               </div>
               <div>
@@ -238,9 +145,9 @@ const Wallet = () => {
               </div>
             </div>
             <Button 
-              onClick={requestPayout} 
+              onClick={handleRequestPayout} 
               className="mt-4"
-              disabled={!wallet?.balance || wallet.balance <= 0}
+              disabled={earnings.availableForPayout <= 0}
             >
               <ArrowUpRight className="w-4 h-4 mr-2" />
               Request Payout
@@ -329,7 +236,7 @@ const Wallet = () => {
                         {transaction.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{new Date(transaction.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

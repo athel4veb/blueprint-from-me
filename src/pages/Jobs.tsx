@@ -4,86 +4,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, MapPin, Clock, DollarSign, Users, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  requirements: string;
-  positions_available: number;
-  positions_filled: number;
-  hourly_rate: number;
-  shift_start: string;
-  shift_end: string;
-  status: string;
-  events: {
-    title: string;
-    location: string;
-    start_date: string;
-    end_date: string;
-    companies: {
-      name: string;
-    };
-  };
-}
+import { useJobs } from '@/presentation/hooks/useJobs';
 
 const Jobs = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { jobs, loading, error, applyForJob } = useJobs();
+  const [filteredJobs, setFilteredJobs] = useState(jobs);
   const [searchTerm, setSearchTerm] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [rateFilter, setRateFilter] = useState('');
 
   useEffect(() => {
-    fetchJobs();
-  }, []);
-
-  useEffect(() => {
     filterJobs();
   }, [jobs, searchTerm, locationFilter, rateFilter]);
-
-  const fetchJobs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('jobs')
-        .select(`
-          *,
-          events (
-            title,
-            location,
-            start_date,
-            end_date,
-            companies (
-              name
-            )
-          )
-        `)
-        .eq('status', 'open')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setJobs(data || []);
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load jobs",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const filterJobs = () => {
     let filtered = jobs;
@@ -91,26 +30,26 @@ const Jobs = () => {
     if (searchTerm) {
       filtered = filtered.filter(job => 
         job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.events.title.toLowerCase().includes(searchTerm.toLowerCase())
+        job.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (job as any).events?.title?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (locationFilter) {
       filtered = filtered.filter(job => 
-        job.events.location.toLowerCase().includes(locationFilter.toLowerCase())
+        (job as any).events?.location?.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
 
     if (rateFilter) {
       const rate = parseFloat(rateFilter);
-      filtered = filtered.filter(job => job.hourly_rate >= rate);
+      filtered = filtered.filter(job => (job.hourlyRate || 0) >= rate);
     }
 
     setFilteredJobs(filtered);
   };
 
-  const applyForJob = async (jobId: string) => {
+  const handleApplyForJob = async (jobId: string) => {
     if (!profile?.id) {
       toast({
         title: "Error",
@@ -121,37 +60,17 @@ const Jobs = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('job_applications')
-        .insert({
-          job_id: jobId,
-          promoter_id: profile.id,
-          status: 'pending'
-        });
-
-      if (error) throw error;
-      
+      await applyForJob(jobId, profile.id);
       toast({
         title: "Success",
         description: "Application submitted successfully!",
       });
-      
-      // Refresh jobs to update application status
-      fetchJobs();
     } catch (error: any) {
-      if (error.code === '23505') {
-        toast({
-          title: "Already Applied",
-          description: "You have already applied for this job",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to submit application",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -159,6 +78,17 @@ const Jobs = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading jobs...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error Loading Jobs</h1>
+          <p className="text-gray-600">{error}</p>
+        </div>
       </div>
     );
   }
@@ -209,63 +139,66 @@ const Jobs = () => {
 
         {/* Jobs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredJobs.map((job) => (
-            <Card key={job.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{job.title}</CardTitle>
-                    <CardDescription>{job.events.companies.name}</CardDescription>
+          {filteredJobs.map((job) => {
+            const jobWithEvents = job as any;
+            return (
+              <Card key={job.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-lg">{job.title}</CardTitle>
+                      <CardDescription>{jobWithEvents.events?.companies?.name}</CardDescription>
+                    </div>
+                    <Badge variant="secondary">
+                      {job.positionsAvailable - job.positionsFilled} left
+                    </Badge>
                   </div>
-                  <Badge variant="secondary">
-                    {job.positions_available - job.positions_filled} left
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    {job.events.title}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    {job.events.location}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Clock className="w-4 h-4 mr-2" />
-                    {job.shift_start} - {job.shift_end}
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <DollarSign className="w-4 h-4 mr-2" />
-                    ${job.hourly_rate}/hour
-                  </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Users className="w-4 h-4 mr-2" />
-                    {job.positions_available} positions available
-                  </div>
-                  <p className="text-sm text-gray-700 line-clamp-3">{job.description}</p>
-                  <div className="flex gap-2 mt-4">
-                    <Button 
-                      onClick={() => navigate(`/jobs/${job.id}`)}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      View Details
-                    </Button>
-                    {profile?.user_type === 'promoter' && (
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      {jobWithEvents.events?.title}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      {jobWithEvents.events?.location}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Clock className="w-4 h-4 mr-2" />
+                      {job.shiftStart} - {job.shiftEnd}
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      ${job.hourlyRate}/hour
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Users className="w-4 h-4 mr-2" />
+                      {job.positionsAvailable} positions available
+                    </div>
+                    <p className="text-sm text-gray-700 line-clamp-3">{job.description}</p>
+                    <div className="flex gap-2 mt-4">
                       <Button 
-                        onClick={() => applyForJob(job.id)}
+                        onClick={() => navigate(`/jobs/${job.id}`)}
+                        variant="outline"
                         className="flex-1"
                       >
-                        Apply Now
+                        View Details
                       </Button>
-                    )}
+                      {profile?.user_type === 'promoter' && (
+                        <Button 
+                          onClick={() => handleApplyForJob(job.id)}
+                          className="flex-1"
+                        >
+                          Apply Now
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {filteredJobs.length === 0 && (
