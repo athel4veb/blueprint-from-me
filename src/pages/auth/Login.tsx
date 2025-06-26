@@ -97,18 +97,18 @@ const Login = () => {
     }
   };
 
-  // Test credentials helper
+  // Test credentials helper with updated email addresses
   const testCredentials = [
-    { type: 'System Admin', email: 'admin@test.com', password: 'password123', description: 'Full system access' },
-    { type: 'Company Owner', email: 'company@test.com', password: 'password123', description: 'John EventCorp' },
-    { type: 'Company Manager', email: 'manager@test.com', password: 'password123', description: 'Sarah Manager' },
-    { type: 'Event Coordinator', email: 'coordinator@test.com', password: 'password123', description: 'Alex Coordinator' },
-    { type: 'Supervisor', email: 'supervisor@test.com', password: 'password123', description: 'Mike Supervisor' },
-    { type: 'Supervisor 2', email: 'supervisor2@test.com', password: 'password123', description: 'Lisa Thompson' },
-    { type: 'Promoter', email: 'promoter@test.com', password: 'password123', description: 'Jane Promoter' },
-    { type: 'Promoter 2', email: 'promoter2@test.com', password: 'password123', description: 'Maria Rodriguez' },
-    { type: 'Promoter 3', email: 'promoter3@test.com', password: 'password123', description: 'David Chen' },
-    { type: 'Company Owner 2', email: 'company2@test.com', password: 'password123', description: 'Robert PromoMax' }
+    { type: 'System Admin', email: 'admin@example.com', password: 'password123', description: 'Full system access' },
+    { type: 'Company Owner', email: 'john@eventcorp.com', password: 'password123', description: 'John EventCorp' },
+    { type: 'Company Manager', email: 'sarah@eventcorp.com', password: 'password123', description: 'Sarah Manager' },
+    { type: 'Event Coordinator', email: 'alex@eventcorp.com', password: 'password123', description: 'Alex Coordinator' },
+    { type: 'Supervisor', email: 'mike@gmail.com', password: 'password123', description: 'Mike Supervisor' },
+    { type: 'Supervisor 2', email: 'lisa@gmail.com', password: 'password123', description: 'Lisa Thompson' },
+    { type: 'Promoter', email: 'jane@gmail.com', password: 'password123', description: 'Jane Promoter' },
+    { type: 'Promoter 2', email: 'maria@gmail.com', password: 'password123', description: 'Maria Rodriguez' },
+    { type: 'Promoter 3', email: 'david@gmail.com', password: 'password123', description: 'David Chen' },
+    { type: 'Company Owner 2', email: 'robert@promomax.com', password: 'password123', description: 'Robert PromoMax' }
   ];
 
   const fillTestCredentials = (credentials: { email: string; password: string }) => {

@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export const seedTestUsers = async () => {
   const testUsers = [
     {
-      email: 'admin@test.com',
+      email: 'admin@example.com',
       password: 'password123',
       userData: {
         full_name: 'System Administrator',
@@ -14,7 +14,7 @@ export const seedTestUsers = async () => {
       role: 'admin'
     },
     {
-      email: 'company@test.com',
+      email: 'john@eventcorp.com',
       password: 'password123',
       userData: {
         full_name: 'John EventCorp',
@@ -24,7 +24,7 @@ export const seedTestUsers = async () => {
       role: 'company_owner'
     },
     {
-      email: 'manager@test.com',
+      email: 'sarah@eventcorp.com',
       password: 'password123',
       userData: {
         full_name: 'Sarah Manager',
@@ -34,7 +34,7 @@ export const seedTestUsers = async () => {
       role: 'company_manager'
     },
     {
-      email: 'coordinator@test.com',
+      email: 'alex@eventcorp.com',
       password: 'password123',
       userData: {
         full_name: 'Alex Coordinator',
@@ -44,7 +44,7 @@ export const seedTestUsers = async () => {
       role: 'event_coordinator'
     },
     {
-      email: 'supervisor@test.com',
+      email: 'mike@gmail.com',
       password: 'password123',
       userData: {
         full_name: 'Mike Supervisor',
@@ -54,7 +54,7 @@ export const seedTestUsers = async () => {
       role: 'supervisor'
     },
     {
-      email: 'supervisor2@test.com',
+      email: 'lisa@gmail.com',
       password: 'password123',
       userData: {
         full_name: 'Lisa Thompson',
@@ -64,7 +64,7 @@ export const seedTestUsers = async () => {
       role: 'supervisor'
     },
     {
-      email: 'promoter@test.com',
+      email: 'jane@gmail.com',
       password: 'password123',
       userData: {
         full_name: 'Jane Promoter',
@@ -74,7 +74,7 @@ export const seedTestUsers = async () => {
       role: 'promoter'
     },
     {
-      email: 'promoter2@test.com',
+      email: 'maria@gmail.com',
       password: 'password123',
       userData: {
         full_name: 'Maria Rodriguez',
@@ -84,7 +84,7 @@ export const seedTestUsers = async () => {
       role: 'promoter'
     },
     {
-      email: 'promoter3@test.com',
+      email: 'david@gmail.com',
       password: 'password123',
       userData: {
         full_name: 'David Chen',
@@ -94,7 +94,7 @@ export const seedTestUsers = async () => {
       role: 'promoter'
     },
     {
-      email: 'company2@test.com',
+      email: 'robert@promomax.com',
       password: 'password123',
       userData: {
         full_name: 'Robert PromoMax',
@@ -189,8 +189,8 @@ export const seedTestUsers = async () => {
     console.log('Updating company ownership...');
     
     // Find the company owner users
-    const johnUser = createdUsers.find(u => u.email === 'company@test.com');
-    const robertUser = createdUsers.find(u => u.email === 'company2@test.com');
+    const johnUser = createdUsers.find(u => u.email === 'john@eventcorp.com');
+    const robertUser = createdUsers.find(u => u.email === 'robert@promomax.com');
     
     if (johnUser) {
       await supabase
