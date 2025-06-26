@@ -14,6 +14,9 @@ export const useJobs = () => {
     queryKey: ['jobs'],
     queryFn: () => container.jobService.getAvailableJobs(),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const applyForJobMutation = useMutation({
@@ -23,6 +26,9 @@ export const useJobs = () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
       queryClient.invalidateQueries({ queryKey: ['applications'] });
     },
+    onError: (error) => {
+      console.error('Failed to apply for job:', error);
+    }
   });
 
   const getJobByIdMutation = useMutation({
@@ -43,5 +49,6 @@ export const useJobs = () => {
     error: error?.message,
     applyForJob,
     getJobById,
+    isApplying: applyForJobMutation.isPending,
   };
 };

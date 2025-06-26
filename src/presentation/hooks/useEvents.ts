@@ -10,13 +10,18 @@ export const useEvents = () => {
 
   const eventsQuery = useQuery({
     queryKey: ['events'],
-    queryFn: () => container.eventService.getAllEvents()
+    queryFn: () => container.eventService.getAllEvents(),
+    staleTime: 3 * 60 * 1000, // 3 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
   const companyEventsQuery = useQuery({
     queryKey: ['events', 'company', user?.id],
     queryFn: () => container.eventService.getEventsByCompany(user?.id || ''),
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 3 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   const createEventMutation = useMutation({
@@ -24,6 +29,9 @@ export const useEvents = () => {
       container.eventService.createEvent(event),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+    onError: (error) => {
+      console.error('Failed to create event:', error);
     }
   });
 
