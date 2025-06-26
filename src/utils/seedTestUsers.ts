@@ -1,42 +1,27 @@
+
 import { supabase } from '@/integrations/supabase/client';
 
 export const seedTestUsers = async () => {
   const testUsers = [
     {
-      email: 'company@test.com',
-      password: 'password123',
-      userData: {
-        full_name: 'John Company',
-        user_type: 'company',
-        phone: '+1234567890'
-      }
-    },
-    {
-      email: 'promoter@test.com',
-      password: 'password123',
-      userData: {
-        full_name: 'Jane Promoter',
-        user_type: 'promoter',
-        phone: '+1234567891'
-      }
-    },
-    {
-      email: 'supervisor@test.com',
-      password: 'password123',
-      userData: {
-        full_name: 'Mike Supervisor',
-        user_type: 'supervisor',
-        phone: '+1234567892'
-      }
-    },
-    {
       email: 'admin@test.com',
       password: 'password123',
       userData: {
-        full_name: 'Admin User',
+        full_name: 'System Administrator',
         user_type: 'company',
-        phone: '+1234567893'
-      }
+        phone: '+1234567890'
+      },
+      role: 'admin'
+    },
+    {
+      email: 'company@test.com',
+      password: 'password123',
+      userData: {
+        full_name: 'John EventCorp',
+        user_type: 'company',
+        phone: '+1234567891'
+      },
+      role: 'company_owner'
     },
     {
       email: 'manager@test.com',
@@ -44,8 +29,9 @@ export const seedTestUsers = async () => {
       userData: {
         full_name: 'Sarah Manager',
         user_type: 'company',
-        phone: '+1234567894'
-      }
+        phone: '+1234567892'
+      },
+      role: 'company_manager'
     },
     {
       email: 'coordinator@test.com',
@@ -53,26 +39,19 @@ export const seedTestUsers = async () => {
       userData: {
         full_name: 'Alex Coordinator',
         user_type: 'company',
-        phone: '+1234567895'
-      }
+        phone: '+1234567893'
+      },
+      role: 'event_coordinator'
     },
     {
-      email: 'promoter2@test.com',
+      email: 'supervisor@test.com',
       password: 'password123',
       userData: {
-        full_name: 'Maria Rodriguez',
-        user_type: 'promoter',
-        phone: '+1234567896'
-      }
-    },
-    {
-      email: 'promoter3@test.com',
-      password: 'password123',
-      userData: {
-        full_name: 'David Chen',
-        user_type: 'promoter',
-        phone: '+1234567897'
-      }
+        full_name: 'Mike Supervisor',
+        user_type: 'supervisor',
+        phone: '+1234567894'
+      },
+      role: 'supervisor'
     },
     {
       email: 'supervisor2@test.com',
@@ -80,21 +59,55 @@ export const seedTestUsers = async () => {
       userData: {
         full_name: 'Lisa Thompson',
         user_type: 'supervisor',
+        phone: '+1234567895'
+      },
+      role: 'supervisor'
+    },
+    {
+      email: 'promoter@test.com',
+      password: 'password123',
+      userData: {
+        full_name: 'Jane Promoter',
+        user_type: 'promoter',
+        phone: '+1234567896'
+      },
+      role: 'promoter'
+    },
+    {
+      email: 'promoter2@test.com',
+      password: 'password123',
+      userData: {
+        full_name: 'Maria Rodriguez',
+        user_type: 'promoter',
+        phone: '+1234567897'
+      },
+      role: 'promoter'
+    },
+    {
+      email: 'promoter3@test.com',
+      password: 'password123',
+      userData: {
+        full_name: 'David Chen',
+        user_type: 'promoter',
         phone: '+1234567898'
-      }
+      },
+      role: 'promoter'
     },
     {
       email: 'company2@test.com',
       password: 'password123',
       userData: {
-        full_name: 'Robert Williams',
+        full_name: 'Robert PromoMax',
         user_type: 'company',
         phone: '+1234567899'
-      }
+      },
+      role: 'company_owner'
     }
   ];
 
   console.log('Starting comprehensive test user seeding...');
+
+  const createdUsers = [];
 
   for (const testUser of testUsers) {
     try {
@@ -111,67 +124,140 @@ export const seedTestUsers = async () => {
 
       if (error) {
         if (error.message.includes('already registered')) {
-          console.log(`User ${testUser.email} already exists, skipping...`);
+          console.log(`User ${testUser.email} already exists, getting existing user...`);
+          // Try to get existing user data
+          const { data: existingUser } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('full_name', testUser.userData.full_name)
+            .single();
+          
+          if (existingUser) {
+            createdUsers.push({ 
+              user: { id: existingUser.id }, 
+              email: testUser.email, 
+              role: testUser.role 
+            });
+          }
         } else {
           console.error(`Error creating user ${testUser.email}:`, error);
         }
-      } else {
+      } else if (data.user) {
         console.log(`Successfully created user: ${testUser.email}`, data);
+        createdUsers.push({ 
+          user: data.user, 
+          email: testUser.email, 
+          role: testUser.role 
+        });
       }
     } catch (error) {
       console.error(`Failed to create user ${testUser.email}:`, error);
     }
   }
 
-  // Wait a moment for users to be created
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  // Wait a moment for users to be fully created
+  await new Promise(resolve => setTimeout(resolve, 3000));
 
-  // Now assign roles to the new users
+  // Now assign roles to the users
   console.log('Assigning roles to test users...');
   
+  for (const userData of createdUsers) {
+    try {
+      console.log(`Assigning role ${userData.role} to user ${userData.email}`);
+      
+      // Insert role for the user
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userData.user.id,
+          role: userData.role,
+          is_active: true
+        });
+
+      if (roleError) {
+        console.error(`Error assigning role to ${userData.email}:`, roleError);
+      } else {
+        console.log(`Successfully assigned role ${userData.role} to ${userData.email}`);
+      }
+    } catch (error) {
+      console.error(`Failed to assign role to ${userData.email}:`, error);
+    }
+  }
+
+  // Update company ownership
   try {
-    // Get current user (should be admin or company owner) to assign roles
-    const { data: { user } } = await supabase.auth.getUser();
+    console.log('Updating company ownership...');
     
-    if (user) {
-      // Assign admin role
-      await assignRoleToUserByEmail('admin@test.com', 'admin');
-      
-      // Assign company manager role
-      await assignRoleToUserByEmail('manager@test.com', 'company_manager');
-      
-      // Assign event coordinator role
-      await assignRoleToUserByEmail('coordinator@test.com', 'event_coordinator');
-      
-      // Assign promoter roles to additional promoters
-      await assignRoleToUserByEmail('promoter2@test.com', 'promoter');
-      await assignRoleToUserByEmail('promoter3@test.com', 'promoter');
-      
-      // Assign supervisor role to second supervisor
-      await assignRoleToUserByEmail('supervisor2@test.com', 'supervisor');
-      
-      // Assign company owner role to second company
-      await assignRoleToUserByEmail('company2@test.com', 'company_owner');
+    // Find the company owner users
+    const johnUser = createdUsers.find(u => u.email === 'company@test.com');
+    const robertUser = createdUsers.find(u => u.email === 'company2@test.com');
+    
+    if (johnUser) {
+      await supabase
+        .from('companies')
+        .update({ owner_id: johnUser.user.id })
+        .eq('name', 'EventCorp Solutions');
+      console.log('Updated EventCorp Solutions ownership');
+    }
+    
+    if (robertUser) {
+      await supabase
+        .from('companies')
+        .update({ owner_id: robertUser.user.id })
+        .eq('name', 'PromoMax Events');
+      console.log('Updated PromoMax Events ownership');
     }
   } catch (error) {
-    console.error('Error assigning roles:', error);
+    console.error('Error updating company ownership:', error);
   }
 
-  console.log('Test user seeding completed with roles assigned!');
-};
-
-const assignRoleToUserByEmail = async (email: string, role: string) => {
+  // Create some sample job applications
   try {
-    // First get the user profile by email (we'll need to use a different approach since we can't query auth.users directly)
-    console.log(`Assigning role ${role} to ${email}`);
+    console.log('Creating sample job applications...');
     
-    // Note: In a real application, you'd want to handle role assignment through an admin interface
-    // For testing purposes, we'll skip the actual role assignment here since it requires
-    // the user to be created first and we don't have direct access to map emails to user IDs
-    // The roles are already assigned in the SQL migration for the original test users
+    const promoterUsers = createdUsers.filter(u => u.role === 'promoter');
+    const { data: jobs } = await supabase
+      .from('jobs')
+      .select('id')
+      .limit(3);
     
-    console.log(`Role assignment queued for ${email} -> ${role}`);
+    if (jobs && promoterUsers.length > 0) {
+      for (let i = 0; i < Math.min(jobs.length, promoterUsers.length); i++) {
+        await supabase
+          .from('job_applications')
+          .insert({
+            job_id: jobs[i].id,
+            promoter_id: promoterUsers[i].user.id,
+            status: i === 0 ? 'approved' : 'pending',
+            notes: 'Test application created during seeding'
+          });
+      }
+      console.log('Created sample job applications');
+    }
   } catch (error) {
-    console.error(`Failed to assign role ${role} to ${email}:`, error);
+    console.error('Error creating job applications:', error);
   }
+
+  // Create sample notifications
+  try {
+    console.log('Creating sample notifications...');
+    
+    for (const userData of createdUsers.slice(0, 5)) {
+      await supabase
+        .from('notifications')
+        .insert({
+          user_id: userData.user.id,
+          title: 'Welcome to the Platform!',
+          message: `Welcome ${userData.email.split('@')[0]}! Your account has been set up successfully.`,
+          type: 'info',
+          is_read: false
+        });
+    }
+    console.log('Created sample notifications');
+  } catch (error) {
+    console.error('Error creating notifications:', error);
+  }
+
+  console.log('Test user seeding completed successfully!');
+  return createdUsers;
 };
