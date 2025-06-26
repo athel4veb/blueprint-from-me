@@ -20,6 +20,9 @@ import Profile from "./pages/Profile";
 import CompanyProfile from "./pages/CompanyProfile";
 import Training from "./pages/Training";
 import AdminPanel from "./pages/AdminPanel";
+import Messages from "./pages/Messages";
+import Calendar from "./pages/Calendar";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -120,6 +123,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AdminPanel />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <ProtectedRoute>
+                  <Messages />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/calendar" 
+              element={
+                <ProtectedRoute>
+                  <Calendar />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/notifications" 
+              element={
+                <ProtectedRoute>
+                  <Notifications />
                 </ProtectedRoute>
               } 
             />
