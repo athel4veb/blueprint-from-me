@@ -14,10 +14,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { container } from '@/infrastructure/di/Container';
 import { Camera, Save, X } from 'lucide-react';
 
+// Enhanced validation schema with security considerations
 const profileFormSchema = z.object({
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
-  phone: z.string().optional(),
-  avatarUrl: z.string().url().optional().or(z.literal('')),
+  fullName: z.string()
+    .min(2, 'Full name must be at least 2 characters')
+    .max(100, 'Full name must be less than 100 characters')
+    .regex(/^[a-zA-Z\s\-'\.]+$/, 'Full name can only contain letters, spaces, hyphens, apostrophes, and periods'),
+  phone: z.string()
+    .regex(/^\+?[\d\s\-\(\)]{10,20}$/, 'Please enter a valid phone number')
+    .optional()
+    .or(z.literal('')),
+  avatarUrl: z.string()
+    .url('Please enter a valid URL')
+    .max(500, 'URL must be less than 500 characters')
+    .optional()
+    .or(z.literal('')),
 });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
@@ -46,11 +57,38 @@ export const ProfileEditForm = ({ profile, onCancel, onSuccess }: ProfileEditFor
   const onSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
     try {
+      // Validate avatar URL if provided
+      if (data.avatarUrl) {
+        try {
+          const url = new URL(data.avatarUrl);
+          // Only allow HTTPS URLs for security
+          if (url.protocol !== 'https:') {
+            throw new Error('Avatar URL must use HTTPS');
+          }
+          // Basic validation for image extensions
+          const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+          const hasValidExtension = allowedExtensions.some(ext => 
+            url.pathname.toLowerCase().endsWith(ext)
+          );
+          if (!hasValidExtension) {
+            throw new Error('Avatar URL must point to a valid image file (jpg, jpeg, png, gif, webp)');
+          }
+        } catch (error) {
+          toast({
+            title: 'Invalid Avatar URL',
+            description: error instanceof Error ? error.message : 'Please enter a valid HTTPS image URL',
+            variant: 'destructive',
+          });
+          setIsLoading(false);
+          return;
+        }
+      }
+
       await container.userRepository.updateUser({
         id: profile.id,
-        fullName: data.fullName,
-        phone: data.phone,
-        avatarUrl: data.avatarUrl,
+        fullName: data.fullName.trim(),
+        phone: data.phone?.trim() || null,
+        avatarUrl: data.avatarUrl?.trim() || null,
       });
 
       await refreshProfile();
@@ -65,7 +103,7 @@ export const ProfileEditForm = ({ profile, onCancel, onSuccess }: ProfileEditFor
       console.error('Error updating profile:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update profile. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to update profile. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -104,18 +142,22 @@ export const ProfileEditForm = ({ profile, onCancel, onSuccess }: ProfileEditFor
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-2 w-full max-w-md">
-                <Label htmlFor="avatarUrl">Profile Picture URL</Label>
+                <Label htmlFor="avatarUrl">Profile Picture URL (HTTPS only)</Label>
                 <div className="flex space-x-2">
                   <Input
                     id="avatarUrl"
-                    placeholder="Enter image URL"
+                    placeholder="https://example.com/image.jpg"
                     value={form.watch('avatarUrl')}
                     onChange={(e) => handleAvatarUrlChange(e.target.value)}
+                    maxLength={500}
                   />
                   <Button type="button" variant="outline" size="icon">
                     <Camera className="h-4 w-4" />
                   </Button>
                 </div>
+                <p className="text-xs text-gray-500">
+                  Must be a valid HTTPS URL pointing to an image file
+                </p>
               </div>
             </div>
 
@@ -126,9 +168,13 @@ export const ProfileEditForm = ({ profile, onCancel, onSuccess }: ProfileEditFor
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>Full Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your full name" {...field} />
+                      <Input 
+                        placeholder="Enter your full name" 
+                        maxLength={100}
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,7 +188,11 @@ export const ProfileEditForm = ({ profile, onCancel, onSuccess }: ProfileEditFor
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter your phone number" {...field} />
+                      <Input 
+                        placeholder="Enter your phone number" 
+                        maxLength={20}
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -164,7 +214,6 @@ export const ProfileEditForm = ({ profile, onCancel, onSuccess }: ProfileEditFor
               </div>
             </div>
 
-            {/* Submit Button */}
             <div className="flex justify-end space-x-4 pt-6">
               <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel

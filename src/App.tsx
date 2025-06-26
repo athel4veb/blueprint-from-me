@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SecurityHeaders } from "@/components/security/SecurityHeaders";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/auth/Login";
@@ -25,11 +26,32 @@ import Calendar from "./pages/Calendar";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Configure QueryClient with security considerations
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Don't retry on authentication errors
+      retry: (failureCount, error: any) => {
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+      // Set reasonable stale time to prevent excessive requests
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      // Enable error boundary for unhandled errors
+      throwOnError: (error: any) => {
+        // Don't throw for expected auth errors
+        return error?.status !== 401 && error?.status !== 403;
+      },
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <SecurityHeaders />
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -150,7 +172,6 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
