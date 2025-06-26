@@ -50,6 +50,61 @@ export type Database = {
           },
         ]
       }
+      company_members: {
+        Row: {
+          company_id: string
+          id: string
+          invited_by: string | null
+          is_active: boolean | null
+          joined_at: string | null
+          permissions: Json | null
+          role: string | null
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          id?: string
+          invited_by?: string | null
+          is_active?: boolean | null
+          joined_at?: string | null
+          permissions?: Json | null
+          role?: string | null
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          id?: string
+          invited_by?: string | null
+          is_active?: boolean | null
+          joined_at?: string | null
+          permissions?: Json | null
+          role?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_members_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_members_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           company_id: string | null
@@ -383,6 +438,27 @@ export type Database = {
           },
         ]
       }
+      permissions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: Database["public"]["Enums"]["permission_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: Database["public"]["Enums"]["permission_type"]
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: Database["public"]["Enums"]["permission_type"]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -459,6 +535,114 @@ export type Database = {
           {
             foreignKeyName: "ratings_rater_id_fkey"
             columns: ["rater_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          id: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Insert: {
+          id?: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          role: Database["public"]["Enums"]["app_role"]
+        }
+        Update: {
+          id?: string
+          permission?: Database["public"]["Enums"]["permission_type"]
+          role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      user_permissions: {
+        Row: {
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          permission: Database["public"]["Enums"]["permission_type"]
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission: Database["public"]["Enums"]["permission_type"]
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission?: Database["public"]["Enums"]["permission_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -571,9 +755,61 @@ export type Database = {
           available_for_payout: number
         }[]
       }
+      get_user_roles: {
+        Args: { user_uuid: string }
+        Returns: {
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
+      has_permission: {
+        Args: {
+          user_uuid: string
+          check_permission: Database["public"]["Enums"]["permission_type"]
+        }
+        Returns: boolean
+      }
+      has_role: {
+        Args: {
+          user_uuid: string
+          check_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role:
+        | "admin"
+        | "company_owner"
+        | "company_manager"
+        | "supervisor"
+        | "promoter"
+        | "event_coordinator"
+      permission_type:
+        | "create_events"
+        | "edit_events"
+        | "delete_events"
+        | "view_events"
+        | "create_jobs"
+        | "edit_jobs"
+        | "delete_jobs"
+        | "view_jobs"
+        | "manage_applications"
+        | "view_applications"
+        | "approve_applications"
+        | "manage_payments"
+        | "view_payments"
+        | "process_payouts"
+        | "manage_users"
+        | "view_users"
+        | "delete_users"
+        | "manage_companies"
+        | "view_companies"
+        | "send_messages"
+        | "view_messages"
+        | "manage_ratings"
+        | "view_ratings"
+        | "admin_panel"
+        | "view_analytics"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -688,6 +924,42 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: [
+        "admin",
+        "company_owner",
+        "company_manager",
+        "supervisor",
+        "promoter",
+        "event_coordinator",
+      ],
+      permission_type: [
+        "create_events",
+        "edit_events",
+        "delete_events",
+        "view_events",
+        "create_jobs",
+        "edit_jobs",
+        "delete_jobs",
+        "view_jobs",
+        "manage_applications",
+        "view_applications",
+        "approve_applications",
+        "manage_payments",
+        "view_payments",
+        "process_payouts",
+        "manage_users",
+        "view_users",
+        "delete_users",
+        "manage_companies",
+        "view_companies",
+        "send_messages",
+        "view_messages",
+        "manage_ratings",
+        "view_ratings",
+        "admin_panel",
+        "view_analytics",
+      ],
+    },
   },
 } as const
