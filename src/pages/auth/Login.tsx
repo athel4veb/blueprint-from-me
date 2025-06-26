@@ -7,11 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { seedTestUsers } from "@/utils/seedTestUsers";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -108,6 +110,27 @@ const Login = () => {
     setPassword(credentials[type].password);
   };
 
+  // Handle seeding test users
+  const handleSeedTestUsers = async () => {
+    setSeeding(true);
+    try {
+      await seedTestUsers();
+      toast({
+        title: "Test users created",
+        description: "You can now use the test credentials to log in",
+      });
+    } catch (error) {
+      console.error('Seeding error:', error);
+      toast({
+        title: "Seeding failed",
+        description: "Failed to create test users. Check console for details.",
+        variant: "destructive",
+      });
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
@@ -150,8 +173,23 @@ const Login = () => {
             </Button>
           </form>
           
+          {/* Test users seeding section */}
+          <div className="mt-6 p-4 bg-blue-50 rounded-md">
+            <p className="text-sm text-blue-800 mb-2 font-medium">Create Test Users First:</p>
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm" 
+              onClick={handleSeedTestUsers}
+              disabled={seeding}
+              className="w-full mb-3 text-blue-700 border-blue-300"
+            >
+              {seeding ? "Creating Test Users..." : "Create Test Users"}
+            </Button>
+          </div>
+          
           {/* Test credentials section */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-md">
+          <div className="mt-4 p-4 bg-gray-50 rounded-md">
             <p className="text-sm text-gray-600 mb-2">Test with pre-seeded accounts:</p>
             <div className="flex flex-col gap-2">
               <Button 
