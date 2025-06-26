@@ -8,6 +8,10 @@ import { SupabaseMessageRepository } from '../repositories/SupabaseMessageReposi
 import { SupabaseNotificationRepository } from '../repositories/SupabaseNotificationRepository';
 import { SupabaseEventRepository } from '../repositories/SupabaseEventRepository';
 import { GetCurrentUserUseCase } from '@/application/usecases/auth/GetCurrentUserUseCase';
+import { GetNotificationsUseCase } from '@/application/usecases/notifications/GetNotificationsUseCase';
+import { CreateNotificationUseCase } from '@/application/usecases/notifications/CreateNotificationUseCase';
+import { GetMessagesUseCase } from '@/application/usecases/messages/GetMessagesUseCase';
+import { SendMessageUseCase } from '@/application/usecases/messages/SendMessageUseCase';
 import { JobService } from '@/application/services/JobService';
 import { WalletService } from '@/application/services/WalletService';
 import { RatingService } from '@/application/services/RatingService';
@@ -29,6 +33,10 @@ class Container {
 
   // Use Cases
   public readonly getCurrentUserUseCase = new GetCurrentUserUseCase(this._userRepository);
+  public readonly getNotificationsUseCase = new GetNotificationsUseCase(this._notificationRepository);
+  public readonly createNotificationUseCase = new CreateNotificationUseCase(this._notificationRepository);
+  public readonly getMessagesUseCase = new GetMessagesUseCase(this._messageRepository);
+  public readonly sendMessageUseCase = new SendMessageUseCase(this._messageRepository);
 
   // Services
   public readonly jobService = new JobService(this._jobRepository);
