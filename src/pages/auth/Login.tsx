@@ -24,6 +24,8 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Login attempt for:', email);
+    
     // Client-side validation
     if (!validateEmail(email)) {
       toast({
@@ -46,12 +48,16 @@ const Login = () => {
     setLoading(true);
 
     try {
+      console.log('Attempting to sign in...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
       });
 
+      console.log('Sign in response:', { data: data.user?.id, error });
+
       if (error) {
+        console.error('Login error:', error);
         // Handle specific authentication errors
         let errorMessage = "Login failed. Please try again.";
         
@@ -63,12 +69,15 @@ const Login = () => {
           errorMessage = "Too many login attempts. Please wait a few minutes before trying again.";
         } else if (error.message.includes('User not found')) {
           errorMessage = "No account found with this email address. Please register first.";
+        } else {
+          errorMessage = error.message;
         }
         
         throw new Error(errorMessage);
       }
 
       if (data.user) {
+        console.log('Login successful for user:', data.user.id);
         toast({
           title: "Login successful",
           description: "Welcome back!",
@@ -85,6 +94,18 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Add test credentials helper
+  const fillTestCredentials = (type: 'company' | 'promoter' | 'supervisor') => {
+    const credentials = {
+      company: { email: 'company@test.com', password: 'password123' },
+      promoter: { email: 'promoter@test.com', password: 'password123' },
+      supervisor: { email: 'supervisor@test.com', password: 'password123' }
+    };
+    
+    setEmail(credentials[type].email);
+    setPassword(credentials[type].password);
   };
 
   return (
@@ -128,6 +149,41 @@ const Login = () => {
               {loading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+          
+          {/* Test credentials section */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-md">
+            <p className="text-sm text-gray-600 mb-2">Test with pre-seeded accounts:</p>
+            <div className="flex flex-col gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fillTestCredentials('company')}
+                className="text-xs"
+              >
+                Fill Company Credentials
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fillTestCredentials('promoter')}
+                className="text-xs"
+              >
+                Fill Promoter Credentials
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fillTestCredentials('supervisor')}
+                className="text-xs"
+              >
+                Fill Supervisor Credentials
+              </Button>
+            </div>
+          </div>
+
           <div className="mt-4 text-center">
             <Link to="/auth/register" className="text-sm text-blue-600 hover:text-blue-500">
               Don't have an account? Sign up
