@@ -9,7 +9,7 @@ import { EventGrid } from '@/components/calendar/EventGrid';
 import { useToast } from '@/hooks/use-toast';
 
 const Calendar = () => {
-  const { user } = useAuth();
+  const { user, userType } = useAuth();
   const { events, deleteEvent } = useEvents();
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -26,7 +26,7 @@ const Calendar = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-6">
         <CalendarHeader 
-          userType={user?.userType}
+          userType={userType}
           onCreateEvent={() => setShowCreateDialog(true)}
         />
 
@@ -34,7 +34,7 @@ const Calendar = () => {
           <CardContent className="p-6">
             <EventGrid
               events={events}
-              userType={user?.userType}
+              userType={userType}
               currentUserId={user?.id}
               onDeleteEvent={handleDeleteEvent}
             />
