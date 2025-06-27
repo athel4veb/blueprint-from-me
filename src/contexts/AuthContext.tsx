@@ -32,7 +32,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string, userEmail?: string): Promise<Profile | null> => {
-    console.log('Fetching profile for user:', userId);
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -40,37 +39,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', userId)
         .single();
 
+      if (error && error.code === 'PGRST116') {
+        // Create profile if it doesn't exist
+        const defaultName = userEmail ? userEmail.split('@')[0] : 'User';
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            full_name: defaultName,
+            user_type: 'promoter'
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          return null;
+        }
+        return newProfile as Profile;
+      }
+
       if (error) {
         console.error('Error fetching profile:', error);
-        
-        // If profile doesn't exist, create a basic one
-        if (error.code === 'PGRST116') {
-          console.log('Profile not found, creating basic profile...');
-          const defaultName = userEmail ? userEmail.split('@')[0] : 'User';
-          
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert({
-              id: userId,
-              full_name: defaultName,
-              user_type: 'promoter' // default user type
-            })
-            .select()
-            .single();
-
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            return null;
-          }
-
-          console.log('Profile created successfully:', newProfile);
-          return newProfile as Profile;
-        }
-        
         return null;
       }
 
-      console.log('Profile fetched successfully:', data);
       return data as Profile;
     } catch (error) {
       console.error('Error in fetchProfile:', error);
@@ -86,100 +79,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    console.log('Setting up auth listener...');
-    
-    let isSubscribed = true;
-
     // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        console.log('Initial session check:', session?.user?.id, error);
-        
-        if (!isSubscribed) return;
-        
-        if (error) {
-          console.error('Error getting initial session:', error);
-          setLoading(false);
-          return;
-        }
-        
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const profileData = await fetchProfile(session.user.id, session.user.email);
+        setProfile(profileData);
+      }
+      
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id, session.user.email);
-          if (isSubscribed) {
-            setProfile(profileData);
-          }
+          setProfile(profileData);
+        } else {
+          setProfile(null);
         }
         
-        if (isSubscribed) {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error in getInitialSession:', error);
-        if (isSubscribed) {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        
-        if (!isSubscribed) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user && event !== 'TOKEN_REFRESHED') {
-          try {
-            const profileData = await fetchProfile(session.user.id, session.user.email);
-            if (isSubscribed) {
-              setProfile(profileData);
-            }
-          } catch (error) {
-            console.error('Error fetching profile in auth state change:', error);
-          }
-        } else if (!session) {
-          if (isSubscribed) {
-            setProfile(null);
-          }
-        }
-        
-        if (isSubscribed && event !== 'TOKEN_REFRESHED') {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     );
 
-    // Initialize
-    getInitialSession();
-
-    return () => {
-      console.log('Cleaning up auth listener');
-      isSubscribed = false;
-      subscription.unsubscribe();
-    };
-  }, []); // Empty dependency array to run only once
+    return () => subscription.unsubscribe();
+  }, []);
 
   const signOut = async () => {
-    try {
-      console.log('Signing out...');
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Error signing out:', error);
-        throw error;
-      }
-      setProfile(null);
-      console.log('Signed out successfully');
-    } catch (error) {
-      console.error('Sign out failed:', error);
-      throw error;
-    }
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    setProfile(null);
   };
 
   return (
