@@ -58,13 +58,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           if (createError) {
             console.error('Error creating profile:', createError);
-            // Set loading to false even if profile creation fails
             setLoading(false);
             return;
           }
 
           console.log('Profile created successfully:', newProfile);
           setProfile(newProfile);
+          setLoading(false);
+          return;
         }
         
         setLoading(false);
@@ -73,15 +74,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       console.log('Profile fetched successfully:', data);
       setProfile(data);
+      setLoading(false);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
-    } finally {
       setLoading(false);
     }
   };
 
   const refreshProfile = async () => {
     if (user?.id) {
+      setLoading(true);
       await fetchProfile(user.id);
     }
   };
@@ -124,6 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user && event !== 'TOKEN_REFRESHED') {
+          // Don't set loading to true here to avoid infinite loading
           await fetchProfile(session.user.id);
         } else if (!session) {
           setProfile(null);
