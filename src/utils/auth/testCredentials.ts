@@ -7,14 +7,13 @@ export interface TestCredential {
 }
 
 export const testCredentials: TestCredential[] = [
-  { type: 'System Admin', email: 'admin@eventplatform.com', password: 'admin123', description: 'System Administrator' },
-  { type: 'Company Owner', email: 'john@eventcorp.com', password: 'password123', description: 'EventCorp Solutions Owner' },
-  { type: 'Company Owner', email: 'robert@promomax.com', password: 'password123', description: 'PromoMax Events Owner' },
-  { type: 'Company Manager', email: 'sarah@eventcorp.com', password: 'password123', description: 'EventCorp Manager' },
-  { type: 'Event Coordinator', email: 'alex@eventcorp.com', password: 'password123', description: 'Event Coordinator' },
-  { type: 'Supervisor', email: 'mike@supervisor.com', password: 'password123', description: 'Mike Thompson' },
-  { type: 'Supervisor', email: 'lisa@supervisor.com', password: 'password123', description: 'Lisa Rodriguez' },
-  { type: 'Promoter', email: 'jane@promoter.com', password: 'password123', description: 'Jane Smith' },
-  { type: 'Promoter', email: 'maria@promoter.com', password: 'password123', description: 'Maria Rodriguez' },
-  { type: 'Promoter', email: 'david@promoter.com', password: 'password123', description: 'David Chen' }
+  { type: 'Manager', email: 'sarah.manager@example.com', password: 'password1', description: 'Sarah Manager' },
+  { type: 'Supervisor', email: 'mike.supervisor@example.com', password: 'password2', description: 'Mike Supervisor' },
+  { type: 'User', email: 'bob@example.com', password: 'password2', description: 'Bob User' },
+  { type: 'Coordinator', email: 'lisa.coordinator@example.com', password: 'password3', description: 'Lisa Coordinator' },
+  { type: 'Promoter', email: 'john.promotertwo@example.com', password: 'password4', description: 'John Promoter Two' },
+  { type: 'Promoter', email: 'emma.promoterthree@example.com', password: 'password5', description: 'Emma Promoter Three' },
+  { type: 'User', email: 'carol@example.com', password: 'password3', description: 'Carol User' },
+  { type: 'Owner', email: 'david.owner@example.com', password: 'password6', description: 'David Owner' },
+  { type: 'User', email: 'alice@example.com', password: 'password1', description: 'Alice User' }
 ];

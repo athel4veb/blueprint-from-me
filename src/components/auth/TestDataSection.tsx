@@ -44,7 +44,7 @@ export const TestDataSection = ({ onFillCredentials }: TestDataSectionProps) => 
         ))}
       </div>
       <p className="text-xs text-blue-600 mt-2">
-        💡 All test accounts use password: <code className="bg-blue-100 px-1 rounded">password123</code>
+        💡 Passwords vary: password1, password2, password3, password4, password5, password6
       </p>
     </div>
   );
