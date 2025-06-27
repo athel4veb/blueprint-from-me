@@ -4,31 +4,6 @@ import { IWalletRepository } from '@/domain/repositories/IWalletRepository';
 import { Wallet, WalletTransaction } from '@/domain/entities/Wallet';
 
 export class SupabaseWalletRepository implements IWalletRepository {
-  private mapToWallet(data: any): Wallet {
-    return {
-      id: data.id,
-      userId: data.user_id,
-      balance: data.balance,
-      pendingBalance: data.pending_balance,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at
-    };
-  }
-
-  private mapToWalletTransaction(data: any): WalletTransaction {
-    return {
-      id: data.id,
-      walletId: data.wallet_id,
-      amount: data.amount,
-      type: data.type as 'credit' | 'debit' | 'pending',
-      status: data.status as 'pending' | 'completed' | 'failed',
-      description: data.description,
-      jobId: data.job_id,
-      paymentId: data.payment_id,
-      createdAt: data.created_at
-    };
-  }
-
   async getWalletByUserId(userId: string): Promise<Wallet | null> {
     const { data, error } = await supabase
       .from('wallets')
@@ -37,7 +12,15 @@ export class SupabaseWalletRepository implements IWalletRepository {
       .single();
 
     if (error) return null;
-    return data ? this.mapToWallet(data) : null;
+
+    return {
+      id: data.id,
+      userId: data.user_id,
+      balance: Number(data.balance),
+      pendingBalance: Number(data.pending_balance),
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
   }
 
   async getTransactionsByWallet(walletId: string): Promise<WalletTransaction[]> {
@@ -48,7 +31,18 @@ export class SupabaseWalletRepository implements IWalletRepository {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []).map(transaction => this.mapToWalletTransaction(transaction));
+
+    return data?.map(transaction => ({
+      id: transaction.id,
+      walletId: transaction.wallet_id,
+      amount: Number(transaction.amount),
+      type: transaction.type as 'credit' | 'debit' | 'pending',
+      status: transaction.status as 'pending' | 'completed' | 'failed',
+      description: transaction.description,
+      jobId: transaction.job_id,
+      paymentId: transaction.payment_id,
+      createdAt: transaction.created_at
+    })) || [];
   }
 
   async calculateEarnings(userId: string): Promise<{
@@ -57,21 +51,17 @@ export class SupabaseWalletRepository implements IWalletRepository {
     availableForPayout: number;
   }> {
     const { data, error } = await supabase
-      .rpc('calculate_promoter_earnings', { promoter_uuid: userId })
-      .single();
+      .rpc('calculate_promoter_earnings', { promoter_uuid: userId });
 
     if (error) throw error;
+
+    const result = data?.[0] || { total_earned: 0, pending_earnings: 0, available_for_payout: 0 };
     
-    // Always map to camelCase regardless of the response format
-    if (data) {
-      return {
-        totalEarned: data.total_earned || 0,
-        pendingEarnings: data.pending_earnings || 0,
-        availableForPayout: data.available_for_payout || 0
-      };
-    }
-    
-    return { totalEarned: 0, pendingEarnings: 0, availableForPayout: 0 };
+    return {
+      totalEarned: Number(result.total_earned),
+      pendingEarnings: Number(result.pending_earnings),
+      availableForPayout: Number(result.available_for_payout)
+    };
   }
 
   async requestPayout(userId: string, amount: number, bankDetails: any): Promise<void> {
@@ -80,7 +70,8 @@ export class SupabaseWalletRepository implements IWalletRepository {
       .insert({
         promoter_id: userId,
         amount,
-        bank_details: bankDetails
+        bank_details: bankDetails,
+        status: 'pending'
       });
 
     if (error) throw error;

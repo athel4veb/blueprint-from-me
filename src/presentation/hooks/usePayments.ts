@@ -7,18 +7,18 @@ export const usePayments = (userId: string) => {
 
   const paymentsQuery = useQuery({
     queryKey: ['payments', userId],
-    queryFn: () => container.paymentService.getPaymentsByOwner(userId),
+    queryFn: () => container.paymentRepository.getPaymentsByOwner(userId),
     enabled: !!userId
   });
 
   const summaryQuery = useQuery({
     queryKey: ['payment-summary', userId],
-    queryFn: () => container.paymentService.getPaymentSummaryByOwner(userId),
+    queryFn: () => container.paymentRepository.getPaymentSummaryByOwner(userId),
     enabled: !!userId
   });
 
   const processPaymentMutation = useMutation({
-    mutationFn: (paymentId: string) => container.paymentService.processPayment(paymentId),
+    mutationFn: (paymentId: string) => container.paymentRepository.processPayment(paymentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['payments', userId] });
       queryClient.invalidateQueries({ queryKey: ['payment-summary', userId] });

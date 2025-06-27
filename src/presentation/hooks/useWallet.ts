@@ -1,20 +1,23 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { container } from '@/infrastructure/di/Container';
-import { useAuth } from '@/presentation/contexts/AuthContext';
 
 export const useWallet = (userId: string) => {
   const queryClient = useQueryClient();
 
   const walletQuery = useQuery({
     queryKey: ['wallet', userId],
-    queryFn: () => container.walletService.getWalletByUserId(userId),
+    queryFn: () => container.walletRepository.getWalletByUserId(userId),
     enabled: !!userId
   });
 
   const transactionsQuery = useQuery({
     queryKey: ['wallet-transactions', userId],
-    queryFn: () => container.walletRepository.getTransactionsByWallet(userId),
+    queryFn: async () => {
+      const wallet = await container.walletRepository.getWalletByUserId(userId);
+      if (!wallet) return [];
+      return container.walletRepository.getTransactionsByWallet(wallet.id);
+    },
     enabled: !!userId
   });
 
