@@ -13,7 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [seeding, setSeeding] = useState(false);
+  const [checking, setChecking] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -97,18 +97,18 @@ const Login = () => {
     }
   };
 
-  // Test credentials helper with updated email addresses
+  // Updated test credentials based on typical seeded data
   const testCredentials = [
-    { type: 'System Admin', email: 'admin@example.com', password: 'password123', description: 'Full system access' },
-    { type: 'Company Owner', email: 'john@eventcorp.com', password: 'password123', description: 'John EventCorp' },
-    { type: 'Company Manager', email: 'sarah@eventcorp.com', password: 'password123', description: 'Sarah Manager' },
-    { type: 'Event Coordinator', email: 'alex@eventcorp.com', password: 'password123', description: 'Alex Coordinator' },
-    { type: 'Supervisor', email: 'mike@gmail.com', password: 'password123', description: 'Mike Supervisor' },
-    { type: 'Supervisor 2', email: 'lisa@gmail.com', password: 'password123', description: 'Lisa Thompson' },
-    { type: 'Promoter', email: 'jane@gmail.com', password: 'password123', description: 'Jane Promoter' },
-    { type: 'Promoter 2', email: 'maria@gmail.com', password: 'password123', description: 'Maria Rodriguez' },
-    { type: 'Promoter 3', email: 'david@gmail.com', password: 'password123', description: 'David Chen' },
-    { type: 'Company Owner 2', email: 'robert@promomax.com', password: 'password123', description: 'Robert PromoMax' }
+    { type: 'System Admin', email: 'admin@eventplatform.com', password: 'admin123', description: 'Full system access' },
+    { type: 'Company Owner', email: 'john@eventcorp.com', password: 'password123', description: 'EventCorp Solutions' },
+    { type: 'Company Owner 2', email: 'robert@promomax.com', password: 'password123', description: 'PromoMax Events' },
+    { type: 'Company Manager', email: 'sarah@eventcorp.com', password: 'password123', description: 'EventCorp Manager' },
+    { type: 'Event Coordinator', email: 'alex@eventcorp.com', password: 'password123', description: 'Event Coordinator' },
+    { type: 'Supervisor', email: 'mike@supervisor.com', password: 'password123', description: 'Mike Supervisor' },
+    { type: 'Supervisor 2', email: 'lisa@supervisor.com', password: 'password123', description: 'Lisa Thompson' },
+    { type: 'Promoter', email: 'jane@promoter.com', password: 'password123', description: 'Jane Promoter' },
+    { type: 'Promoter 2', email: 'maria@promoter.com', password: 'password123', description: 'Maria Rodriguez' },
+    { type: 'Promoter 3', email: 'david@promoter.com', password: 'password123', description: 'David Chen' }
   ];
 
   const fillTestCredentials = (credentials: { email: string; password: string }) => {
@@ -116,25 +116,25 @@ const Login = () => {
     setPassword(credentials.password);
   };
 
-  // Handle seeding test users
-  const handleSeedTestUsers = async () => {
-    setSeeding(true);
+  // Handle checking existing test data
+  const handleCheckTestData = async () => {
+    setChecking(true);
     try {
-      console.log('Starting seeding process...');
-      const users = await seedTestUsers();
+      console.log('Checking existing test data...');
+      const result = await seedTestUsers();
       toast({
-        title: "Test users created successfully!",
-        description: `Created ${users.length} test accounts with roles. Database also contains sample companies, events, and jobs.`,
+        title: "Test Data Check Complete!",
+        description: `Found ${result.profiles?.length || 0} profiles, ${result.companies?.length || 0} companies, ${result.events?.length || 0} events, and ${result.jobs?.length || 0} jobs in the database.`,
       });
-    } catch (error) {
-      console.error('Seeding error:', error);
+    } catch (error: any) {
+      console.error('Data check error:', error);
       toast({
-        title: "Seeding failed",
-        description: "Failed to create test users. Check console for details.",
+        title: "Data Check Info",
+        description: error.message || "Please ensure test data is manually added to the database first.",
         variant: "destructive",
       });
     } finally {
-      setSeeding(false);
+      setChecking(false);
     }
   };
 
@@ -180,27 +180,27 @@ const Login = () => {
             </Button>
           </form>
           
-          {/* Test users seeding section */}
-          <div className="mb-6 p-4 bg-green-50 rounded-md border border-green-200">
-            <p className="text-sm text-green-800 mb-2 font-medium">🌱 Seed Complete Database:</p>
-            <p className="text-xs text-green-700 mb-3">
-              Creates 10 test users with roles + sample companies, events, and jobs
+          {/* Test data check section */}
+          <div className="mb-6 p-4 bg-blue-50 rounded-md border border-blue-200">
+            <p className="text-sm text-blue-800 mb-2 font-medium">🔍 Check Test Data:</p>
+            <p className="text-xs text-blue-700 mb-3">
+              Verify existing test data in the database
             </p>
             <Button 
               type="button" 
               variant="outline" 
               size="sm" 
-              onClick={handleSeedTestUsers}
-              disabled={seeding}
-              className="w-full text-green-700 border-green-300 hover:bg-green-100"
+              onClick={handleCheckTestData}
+              disabled={checking}
+              className="w-full text-blue-700 border-blue-300 hover:bg-blue-100"
             >
-              {seeding ? "🔄 Creating Complete Test Environment..." : "🚀 Seed All Test Data Now"}
+              {checking ? "🔄 Checking Database..." : "📊 Check Existing Test Data"}
             </Button>
           </div>
           
           {/* Test credentials section */}
-          <div className="p-4 bg-blue-50 rounded-md border border-blue-200">
-            <p className="text-sm text-blue-800 mb-3 font-medium">🧪 Test Accounts (seed data first):</p>
+          <div className="p-4 bg-green-50 rounded-md border border-green-200">
+            <p className="text-sm text-green-800 mb-3 font-medium">🧪 Test Accounts (if data exists):</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {testCredentials.map((cred, index) => (
                 <Button 
@@ -209,11 +209,11 @@ const Login = () => {
                   variant="outline" 
                   size="sm" 
                   onClick={() => fillTestCredentials({ email: cred.email, password: cred.password })}
-                  className="text-xs justify-between p-2 h-auto text-blue-700 border-blue-300 hover:bg-blue-100"
+                  className="text-xs justify-between p-2 h-auto text-green-700 border-green-300 hover:bg-green-100"
                 >
                   <div className="text-left">
                     <div className="font-medium">{cred.type}</div>
-                    <div className="text-xs text-blue-600">{cred.description}</div>
+                    <div className="text-xs text-green-600">{cred.description}</div>
                   </div>
                 </Button>
               ))}

@@ -810,6 +810,11 @@ export type Database = {
         | "view_ratings"
         | "admin_panel"
         | "view_analytics"
+        | "view_reports"
+        | "assign_roles"
+        | "edit_company"
+        | "approve_jobs"
+        | "apply_jobs"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -959,6 +964,11 @@ export const Constants = {
         "view_ratings",
         "admin_panel",
         "view_analytics",
+        "view_reports",
+        "assign_roles",
+        "edit_company",
+        "approve_jobs",
+        "apply_jobs",
       ],
     },
   },
