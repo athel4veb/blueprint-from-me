@@ -4,16 +4,16 @@ import { useEffect } from 'react';
 // Component to set security headers via meta tags
 export const SecurityHeaders = () => {
   useEffect(() => {
-    // Set Content Security Policy
+    // Set Content Security Policy - more permissive for development
     const csp = document.createElement('meta');
     csp.httpEquiv = 'Content-Security-Policy';
-    csp.content = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://dtleadcbggplbegdzuqd.supabase.co;";
+    csp.content = "default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; style-src 'self' 'unsafe-inline' https: http:; img-src 'self' data: https: http:; connect-src 'self' https: http: wss: ws:; font-src 'self' https: http: data:; media-src 'self' https: http:; object-src 'none'; frame-src 'self' https:;";
     document.head.appendChild(csp);
 
-    // Set X-Frame-Options
+    // Set X-Frame-Options - allow same origin
     const frameOptions = document.createElement('meta');
     frameOptions.httpEquiv = 'X-Frame-Options';
-    frameOptions.content = 'DENY';
+    frameOptions.content = 'SAMEORIGIN';
     document.head.appendChild(frameOptions);
 
     // Set X-Content-Type-Options
@@ -30,10 +30,15 @@ export const SecurityHeaders = () => {
 
     return () => {
       // Cleanup on unmount
-      document.head.removeChild(csp);
-      document.head.removeChild(frameOptions);
-      document.head.removeChild(contentType);
-      document.head.removeChild(referrer);
+      try {
+        if (csp.parentNode) document.head.removeChild(csp);
+        if (frameOptions.parentNode) document.head.removeChild(frameOptions);
+        if (contentType.parentNode) document.head.removeChild(contentType);
+        if (referrer.parentNode) document.head.removeChild(referrer);
+      } catch (error) {
+        // Ignore cleanup errors
+        console.log('Security headers cleanup completed');
+      }
     };
   }, []);
 
