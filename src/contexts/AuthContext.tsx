@@ -42,6 +42,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         console.error('Error fetching profile:', error);
+        
+        // If profile doesn't exist, create a basic one
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating basic profile...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: userId,
+              full_name: user?.email?.split('@')[0] || 'User',
+              user_type: 'promoter' // default user type
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            // Set loading to false even if profile creation fails
+            setLoading(false);
+            return;
+          }
+
+          console.log('Profile created successfully:', newProfile);
+          setProfile(newProfile);
+        }
+        
+        setLoading(false);
         return;
       }
 
@@ -49,6 +75,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(data);
     } catch (error) {
       console.error('Error in fetchProfile:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,8 +106,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (session?.user) {
           await fetchProfile(session.user.id);
+        } else {
+          setLoading(false);
         }
-        setLoading(false);
       } catch (error) {
         console.error('Error in getInitialSession:', error);
         setLoading(false);
@@ -98,9 +127,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           await fetchProfile(session.user.id);
         } else if (!session) {
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
