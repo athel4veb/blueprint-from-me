@@ -196,7 +196,7 @@ const JobDetails = () => {
               </CardContent>
             </Card>
 
-            {user?.user_type === 'promoter' && (
+            {user?.userType === 'promoter' && (
               <Card>
                 <CardHeader>
                   <CardTitle>Apply for This Job</CardTitle>

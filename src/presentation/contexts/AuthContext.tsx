@@ -7,6 +7,7 @@ import { User as DomainUser } from '@/domain/entities/User';
 
 interface AuthContextType {
   user: DomainUser | null;
+  profile: DomainUser | null;
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -25,7 +26,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user);
       } else {
         setLoading(false);
       }
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         
         if (session?.user) {
-          await fetchUserProfile(session.user.id);
+          await fetchUserProfile(session.user);
         } else {
           setUser(null);
           setLoading(false);
@@ -48,10 +49,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (authUser: User) => {
     try {
-      const userProfile = await container.userRepository.getUserById(userId);
-      setUser(userProfile);
+      const userProfile = await container.userRepository.getUserById(authUser.id);
+      if (userProfile) {
+        // Add email from auth user to domain user
+        const userWithEmail = {
+          ...userProfile,
+          email: authUser.email
+        };
+        setUser(userWithEmail);
+      } else {
+        setUser(null);
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
       setUser(null);
@@ -68,6 +78,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <AuthContext.Provider value={{ 
       user, 
+      profile: user, // profile is same as user
       session, 
       loading, 
       signOut: handleSignOut, 

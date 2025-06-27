@@ -28,7 +28,7 @@ const Wallet = () => {
 
   const handleRequestPayout = async () => {
     try {
-      await requestPayout(parseFloat(payoutAmount), bankDetails);
+      await requestPayout({ amount: parseFloat(payoutAmount), bankDetails });
       toast({
         title: "Success",
         description: "Payout request submitted successfully",

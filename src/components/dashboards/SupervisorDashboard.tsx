@@ -80,7 +80,7 @@ const SupervisorDashboard = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Supervisor Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {user?.full_name}!</p>
+          <p className="text-gray-600">Welcome back, {user?.fullName}!</p>
         </div>
 
         {/* Stats Cards */}

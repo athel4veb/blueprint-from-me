@@ -111,7 +111,7 @@ const Jobs = () => {
             <JobCard
               key={job.id}
               job={job as any}
-              userType={user?.user_type}
+              userType={user?.userType}
               onViewDetails={(jobId) => navigate(`/jobs/${jobId}`)}
               onApply={handleApplyForJob}
             />

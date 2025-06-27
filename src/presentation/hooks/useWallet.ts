@@ -14,25 +14,25 @@ export const useWallet = (userId: string) => {
 
   const transactionsQuery = useQuery({
     queryKey: ['wallet-transactions', userId],
-    queryFn: () => container.walletService.getTransactionsByUserId(userId),
+    queryFn: () => container.walletRepository.getTransactionsByWallet(userId),
     enabled: !!userId
   });
 
   const payoutRequestsQuery = useQuery({
     queryKey: ['payout-requests', userId],
-    queryFn: () => container.walletService.getPayoutRequestsByUserId(userId),
+    queryFn: () => container.walletRepository.getPayoutRequests(userId),
     enabled: !!userId
   });
 
   const earningsQuery = useQuery({
     queryKey: ['earnings', userId],
-    queryFn: () => container.walletService.getEarningsByUserId(userId),
+    queryFn: () => container.walletRepository.calculateEarnings(userId),
     enabled: !!userId
   });
 
   const requestPayoutMutation = useMutation({
     mutationFn: ({ amount, bankDetails }: { amount: number; bankDetails: string }) =>
-      container.walletService.requestPayout(userId, amount, bankDetails),
+      container.walletRepository.requestPayout(userId, amount, bankDetails),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['wallet', userId] });
       queryClient.invalidateQueries({ queryKey: ['payout-requests', userId] });

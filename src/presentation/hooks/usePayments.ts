@@ -2,26 +2,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { container } from '@/infrastructure/di/Container';
 
-export const usePayments = (companyId: string) => {
+export const usePayments = (userId: string) => {
   const queryClient = useQueryClient();
 
   const paymentsQuery = useQuery({
-    queryKey: ['payments', companyId],
-    queryFn: () => container.paymentService.getPaymentsByCompany(companyId),
-    enabled: !!companyId
+    queryKey: ['payments', userId],
+    queryFn: () => container.paymentService.getPaymentsByOwner(userId),
+    enabled: !!userId
   });
 
   const summaryQuery = useQuery({
-    queryKey: ['payment-summary', companyId],
-    queryFn: () => container.paymentService.getPaymentSummary(companyId),
-    enabled: !!companyId
+    queryKey: ['payment-summary', userId],
+    queryFn: () => container.paymentService.getPaymentSummaryByOwner(userId),
+    enabled: !!userId
   });
 
   const processPaymentMutation = useMutation({
     mutationFn: (paymentId: string) => container.paymentService.processPayment(paymentId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['payments', companyId] });
-      queryClient.invalidateQueries({ queryKey: ['payment-summary', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['payments', userId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-summary', userId] });
     }
   });
 

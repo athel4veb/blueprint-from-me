@@ -10,17 +10,17 @@ export const useJobs = () => {
 
   const jobsQuery = useQuery({
     queryKey: ['jobs'],
-    queryFn: () => container.jobService.getAllJobs(),
+    queryFn: () => container.jobRepository.getAllJobs(),
     staleTime: 3 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
   const getJobById = async (jobId: string): Promise<Job> => {
-    return container.jobService.getJobById(jobId);
+    return container.jobRepository.getJobById(jobId);
   };
 
   const applyForJob = async (jobId: string, promoterId: string) => {
-    return container.jobService.applyForJob(jobId, promoterId);
+    return container.jobRepository.applyForJob(jobId, promoterId);
   };
 
   return {
