@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, MapPin, Users, ClipboardCheck, AlertTriangle } from 'lucide-react';
 
@@ -19,14 +18,14 @@ interface Assignment {
 }
 
 const SupervisorDashboard = () => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [activeEvents, setActiveEvents] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAssignments();
-  }, [profile]);
+  }, [user]);
 
   const fetchAssignments = async () => {
     // For now, we'll show sample data since supervisor assignments
@@ -81,7 +80,7 @@ const SupervisorDashboard = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Supervisor Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {profile?.full_name}!</p>
+          <p className="text-gray-600">Welcome back, {user?.full_name}!</p>
         </div>
 
         {/* Stats Cards */}

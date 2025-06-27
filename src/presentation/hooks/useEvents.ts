@@ -1,8 +1,7 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { container } from '@/infrastructure/di/Container';
 import { Event } from '@/domain/entities/Event';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 
 export const useEvents = () => {
   const { user } = useAuth();

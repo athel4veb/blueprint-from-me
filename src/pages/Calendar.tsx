@@ -1,7 +1,6 @@
-
 import { useState, useMemo } from 'react';
 import { useEvents } from '@/presentation/hooks/useEvents';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { CalendarHeader } from '@/components/calendar/CalendarHeader';

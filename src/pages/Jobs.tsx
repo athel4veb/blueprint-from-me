@@ -1,6 +1,5 @@
-
 import { useEffect, useState, useMemo } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useJobs } from '@/presentation/hooks/useJobs';
@@ -8,7 +7,7 @@ import { JobFilters } from '@/components/jobs/JobFilters';
 import { JobCard } from '@/components/jobs/JobCard';
 
 const Jobs = () => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { jobs, loading, error, applyForJob } = useJobs();
@@ -37,7 +36,7 @@ const Jobs = () => {
   }, [jobs, searchTerm, locationFilter, rateFilter, statusFilter]);
 
   const handleApplyForJob = async (jobId: string) => {
-    if (!profile?.id) {
+    if (!user?.id) {
       toast({
         title: "Error",
         description: "Please log in to apply for jobs",
@@ -47,7 +46,7 @@ const Jobs = () => {
     }
 
     try {
-      await applyForJob(jobId, profile.id);
+      await applyForJob(jobId, user.id);
       toast({
         title: "Success",
         description: "Application submitted successfully!",
@@ -112,7 +111,7 @@ const Jobs = () => {
             <JobCard
               key={job.id}
               job={job as any}
-              userType={profile?.user_type}
+              userType={user?.user_type}
               onViewDetails={(jobId) => navigate(`/jobs/${jobId}`)}
               onApply={handleApplyForJob}
             />

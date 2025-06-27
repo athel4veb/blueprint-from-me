@@ -1,6 +1,5 @@
-
 import { useMessages } from '@/presentation/hooks/useMessages';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessagesHeader } from '@/components/messages/MessagesHeader';
 import { MessagesList } from '@/components/messages/MessagesList';

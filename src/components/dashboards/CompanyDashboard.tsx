@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Calendar, MapPin, Users, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +25,7 @@ interface Event {
 }
 
 const CompanyDashboard = () => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [company, setCompany] = useState<any>(null);
@@ -34,17 +33,17 @@ const CompanyDashboard = () => {
 
   useEffect(() => {
     fetchCompanyData();
-  }, [profile]);
+  }, [user]);
 
   const fetchCompanyData = async () => {
-    if (!profile?.id) return;
+    if (!user?.id) return;
 
     try {
       // First get the company
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('*')
-        .eq('owner_id', profile.id)
+        .eq('owner_id', user.id)
         .single();
 
       if (companyError && companyError.code !== 'PGRST116') {

@@ -1,10 +1,9 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { DollarSign, CreditCard, ArrowUpRight, ArrowDownLeft, Clock, CheckCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,7 +11,7 @@ import { useWallet } from '@/presentation/hooks/useWallet';
 import { useState } from 'react';
 
 const Wallet = () => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [payoutAmount, setPayoutAmount] = useState('');
   const [bankDetails, setBankDetails] = useState('');
@@ -25,7 +24,7 @@ const Wallet = () => {
     loading,
     error,
     requestPayout
-  } = useWallet(profile?.id || '');
+  } = useWallet(user?.id || '');
 
   const handleRequestPayout = async () => {
     try {

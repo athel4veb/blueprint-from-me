@@ -1,58 +1,35 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { container } from '@/infrastructure/di/Container';
-import { PaymentSummary, PaymentWithDetails } from '@/domain/repositories/IPaymentRepository';
 
-export const usePayments = (userId: string) => {
-  const [payments, setPayments] = useState<PaymentWithDetails[]>([]);
-  const [summary, setSummary] = useState<PaymentSummary>({
-    totalPaid: 0,
-    pendingPayments: 0,
-    failedPayments: 0
+export const usePayments = (companyId: string) => {
+  const queryClient = useQueryClient();
+
+  const paymentsQuery = useQuery({
+    queryKey: ['payments', companyId],
+    queryFn: () => container.paymentService.getPaymentsByCompany(companyId),
+    enabled: !!companyId
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchPayments = async () => {
-    if (!userId) return;
+  const summaryQuery = useQuery({
+    queryKey: ['payment-summary', companyId],
+    queryFn: () => container.paymentService.getPaymentSummary(companyId),
+    enabled: !!companyId
+  });
 
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const [paymentsData, summaryData] = await Promise.all([
-        container.paymentService.getPaymentsByOwner(userId),
-        container.paymentService.getPaymentSummaryByOwner(userId)
-      ]);
-
-      setPayments(paymentsData);
-      setSummary(summaryData);
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
-    } finally {
-      setLoading(false);
+  const processPaymentMutation = useMutation({
+    mutationFn: (paymentId: string) => container.paymentService.processPayment(paymentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payments', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['payment-summary', companyId] });
     }
-  };
-
-  useEffect(() => {
-    fetchPayments();
-  }, [userId]);
-
-  const processPayment = async (paymentId: string) => {
-    try {
-      await container.paymentService.processPayment(paymentId);
-      await fetchPayments(); // Refresh data
-    } catch (error) {
-      throw error;
-    }
-  };
+  });
 
   return {
-    payments,
-    summary,
-    loading,
-    error,
-    processPayment,
-    refetch: fetchPayments
+    payments: paymentsQuery.data || [],
+    summary: summaryQuery.data || { totalPaid: 0, pendingPayments: 0, failedPayments: 0 },
+    loading: paymentsQuery.isLoading,
+    error: paymentsQuery.error?.message,
+    processPayment: processPaymentMutation.mutateAsync
   };
 };

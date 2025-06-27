@@ -1,16 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { CreditCard, Clock, CheckCircle, XCircle, DollarSign } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePayments } from '@/presentation/hooks/usePayments';
 
 const Payments = () => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { payments, summary, loading, error, processPayment } = usePayments(profile?.id || '');
+  const { payments, summary, loading, error, processPayment } = usePayments(user?.id || '');
 
   const handleProcessPayment = async (paymentId: string) => {
     try {
@@ -58,7 +58,7 @@ const Payments = () => {
     }
   };
 
-  if (profile?.user_type !== 'company') {
+  if (user?.user_type !== 'company') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

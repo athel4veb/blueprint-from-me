@@ -1,13 +1,12 @@
-
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import PromoterDashboard from '@/components/dashboards/PromoterDashboard';
 import CompanyDashboard from '@/components/dashboards/CompanyDashboard';
 import SupervisorDashboard from '@/components/dashboards/SupervisorDashboard';
 
 const Dashboard = () => {
-  const { profile, loading, user } = useAuth();
+  const { user, loading, userType } = useAuth();
 
-  console.log('Dashboard render:', { profile, loading, user: user?.id });
+  console.log('Dashboard render:', { user: user?.id, loading, userType });
 
   if (loading) {
     return (
@@ -20,8 +19,8 @@ const Dashboard = () => {
     );
   }
 
-  // If user is authenticated but no profile exists, show setup message
-  if (user && !profile) {
+  // If user is authenticated but no user exists, show setup message
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -33,7 +32,7 @@ const Dashboard = () => {
     );
   }
 
-  switch (profile?.user_type) {
+  switch (user?.userType) {
     case 'promoter':
       return <PromoterDashboard />;
     case 'company':
@@ -46,9 +45,9 @@ const Dashboard = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Welcome to EventStaff Pro</h1>
             <p className="text-gray-600">Please complete your profile setup or contact support.</p>
-            {profile && (
+            {user && (
               <p className="text-sm text-gray-500 mt-2">
-                Current user type: {profile.user_type || 'Not set'}
+                Current user type: {user.userType || 'Not set'}
               </p>
             )}
           </div>

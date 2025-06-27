@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { Calendar, MapPin, Clock, DollarSign, Users, ArrowLeft, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useJobs } from '@/presentation/hooks/useJobs';
@@ -14,7 +13,7 @@ import { Job } from '@/domain/entities/Job';
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const { getJobById, applyForJob } = useJobs();
   const [job, setJob] = useState<Job | null>(null);
@@ -45,11 +44,11 @@ const JobDetails = () => {
   };
 
   const handleApplyForJob = async () => {
-    if (!profile?.id || !id) return;
+    if (!user?.id || !id) return;
 
     setApplying(true);
     try {
-      await applyForJob(id, profile.id);
+      await applyForJob(id, user.id);
       toast({
         title: "Success",
         description: "Application submitted successfully!",
@@ -197,7 +196,7 @@ const JobDetails = () => {
               </CardContent>
             </Card>
 
-            {profile?.user_type === 'promoter' && (
+            {user?.user_type === 'promoter' && (
               <Card>
                 <CardHeader>
                   <CardTitle>Apply for This Job</CardTitle>

@@ -2,53 +2,32 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { container } from '@/infrastructure/di/Container';
 import { Job } from '@/domain/entities/Job';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 
 export const useJobs = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const {
-    data: jobs = [],
-    isLoading: loading,
-    error,
-  } = useQuery({
+  const jobsQuery = useQuery({
     queryKey: ['jobs'],
-    queryFn: () => container.jobService.getAvailableJobs(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
+    queryFn: () => container.jobService.getAllJobs(),
+    staleTime: 3 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
-  const applyForJobMutation = useMutation({
-    mutationFn: ({ jobId, promoterId }: { jobId: string; promoterId: string }) =>
-      container.jobService.applyForJob(jobId, promoterId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
-      queryClient.invalidateQueries({ queryKey: ['applications'] });
-    },
-    onError: (error) => {
-      console.error('Failed to apply for job:', error);
-    }
-  });
-
-  const getJobByIdMutation = useMutation({
-    mutationFn: (jobId: string) => container.jobService.getJobById(jobId),
-  });
-
-  const applyForJob = async (jobId: string, promoterId: string) => {
-    return applyForJobMutation.mutateAsync({ jobId, promoterId });
+  const getJobById = async (jobId: string): Promise<Job> => {
+    return container.jobService.getJobById(jobId);
   };
 
-  const getJobById = async (jobId: string): Promise<Job | null> => {
-    return getJobByIdMutation.mutateAsync(jobId);
+  const applyForJob = async (jobId: string, promoterId: string) => {
+    return container.jobService.applyForJob(jobId, promoterId);
   };
 
   return {
-    jobs,
-    loading,
-    error: error?.message,
-    applyForJob,
+    jobs: jobsQuery.data || [],
+    loading: jobsQuery.isLoading,
+    error: jobsQuery.error?.message,
     getJobById,
-    isApplying: applyForJobMutation.isPending,
+    applyForJob
   };
 };

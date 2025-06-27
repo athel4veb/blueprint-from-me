@@ -1,69 +1,51 @@
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { container } from '@/infrastructure/di/Container';
-import { Wallet, WalletTransaction } from '@/domain/entities/Wallet';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 
 export const useWallet = (userId: string) => {
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  const [payoutRequests, setPayoutRequests] = useState<any[]>([]);
-  const [earnings, setEarnings] = useState({
-    totalEarned: 0,
-    pendingEarnings: 0,
-    availableForPayout: 0
+  const queryClient = useQueryClient();
+
+  const walletQuery = useQuery({
+    queryKey: ['wallet', userId],
+    queryFn: () => container.walletService.getWalletByUserId(userId),
+    enabled: !!userId
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchWalletData = async () => {
-    if (!userId) return;
+  const transactionsQuery = useQuery({
+    queryKey: ['wallet-transactions', userId],
+    queryFn: () => container.walletService.getTransactionsByUserId(userId),
+    enabled: !!userId
+  });
 
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const [walletData, earningsData, payoutData] = await Promise.all([
-        container.walletService.getWalletByUserId(userId),
-        container.walletService.calculateEarnings(userId),
-        container.walletService.getPayoutRequests(userId)
-      ]);
+  const payoutRequestsQuery = useQuery({
+    queryKey: ['payout-requests', userId],
+    queryFn: () => container.walletService.getPayoutRequestsByUserId(userId),
+    enabled: !!userId
+  });
 
-      setWallet(walletData);
-      setEarnings(earningsData);
-      setPayoutRequests(payoutData);
+  const earningsQuery = useQuery({
+    queryKey: ['earnings', userId],
+    queryFn: () => container.walletService.getEarningsByUserId(userId),
+    enabled: !!userId
+  });
 
-      if (walletData) {
-        const transactionData = await container.walletService.getTransactionsByWallet(walletData.id);
-        setTransactions(transactionData);
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'An error occurred');
-    } finally {
-      setLoading(false);
+  const requestPayoutMutation = useMutation({
+    mutationFn: ({ amount, bankDetails }: { amount: number; bankDetails: string }) =>
+      container.walletService.requestPayout(userId, amount, bankDetails),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wallet', userId] });
+      queryClient.invalidateQueries({ queryKey: ['payout-requests', userId] });
     }
-  };
-
-  useEffect(() => {
-    fetchWalletData();
-  }, [userId]);
-
-  const requestPayout = async (amount: number, bankDetails: string) => {
-    try {
-      await container.walletService.requestPayout(userId, amount, bankDetails);
-      await fetchWalletData(); // Refresh data
-    } catch (error) {
-      throw error;
-    }
-  };
+  });
 
   return {
-    wallet,
-    transactions,
-    payoutRequests,
-    earnings,
-    loading,
-    error,
-    requestPayout,
-    refetch: fetchWalletData
+    wallet: walletQuery.data,
+    transactions: transactionsQuery.data || [],
+    payoutRequests: payoutRequestsQuery.data || [],
+    earnings: earningsQuery.data || { totalEarned: 0, pendingEarnings: 0, availableForPayout: 0 },
+    loading: walletQuery.isLoading,
+    error: walletQuery.error?.message,
+    requestPayout: requestPayoutMutation.mutateAsync
   };
 };

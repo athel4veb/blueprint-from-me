@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/presentation/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, MapPin, Clock, DollarSign, Users } from 'lucide-react';
 
@@ -30,7 +29,7 @@ interface Job {
 }
 
 const PromoterDashboard = () => {
-  const { profile } = useAuth();
+  const { user } = useAuth();
   const [availableJobs, setAvailableJobs] = useState<Job[]>([]);
   const [myApplications, setMyApplications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +68,7 @@ const PromoterDashboard = () => {
   };
 
   const fetchMyApplications = async () => {
-    if (!profile?.id) return;
+    if (!user?.id) return;
 
     try {
       const { data, error } = await supabase
@@ -86,7 +85,7 @@ const PromoterDashboard = () => {
             )
           )
         `)
-        .eq('promoter_id', profile.id)
+        .eq('promoter_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -97,14 +96,14 @@ const PromoterDashboard = () => {
   };
 
   const applyForJob = async (jobId: string) => {
-    if (!profile?.id) return;
+    if (!user?.id) return;
 
     try {
       const { error } = await supabase
         .from('job_applications')
         .insert({
           job_id: jobId,
-          promoter_id: profile.id,
+          promoter_id: user.id,
           status: 'pending'
         });
 
@@ -140,7 +139,7 @@ const PromoterDashboard = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Promoter Dashboard</h1>
-          <p className="text-gray-600">Welcome back, {profile?.full_name}!</p>
+          <p className="text-gray-600">Welcome back, {user?.full_name}!</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
