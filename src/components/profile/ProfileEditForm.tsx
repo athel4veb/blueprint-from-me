@@ -16,7 +16,7 @@ interface ProfileEditFormProps {
 export const ProfileEditForm = ({ profile, onCancel, onSuccess }: ProfileEditFormProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    fullName: profile?.full_name || '',
+    fullName: profile?.fullName || '',
     phone: profile?.phone || ''
   });
 

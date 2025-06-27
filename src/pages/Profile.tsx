@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/presentation/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -77,16 +78,16 @@ const Profile = () => {
             <div className="flex items-start justify-between">
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={profile.avatar_url || ''} alt={profile.full_name} />
+                  <AvatarImage src={profile.avatarUrl || ''} alt={profile.fullName} />
                   <AvatarFallback className="text-lg">
-                    {profile.full_name.split(' ').map(n => n[0]).join('')}
+                    {profile.fullName.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <CardTitle className="text-2xl">{profile.full_name}</CardTitle>
+                  <CardTitle className="text-2xl">{profile.fullName}</CardTitle>
                   <div className="flex items-center space-x-2 mt-2">
-                    <Badge className={getUserTypeColor(profile.user_type)}>
-                      {getUserTypeLabel(profile.user_type)}
+                    <Badge className={getUserTypeColor(profile.userType)}>
+                      {getUserTypeLabel(profile.userType)}
                     </Badge>
                   </div>
                 </div>
@@ -123,7 +124,7 @@ const Profile = () => {
                   <div>
                     <p className="text-sm text-gray-500">Member Since</p>
                     <p className="font-medium">
-                      {new Date(profile.created_at).toLocaleDateString()}
+                      {new Date(profile.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>

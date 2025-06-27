@@ -10,7 +10,7 @@ export const useJobs = () => {
 
   const jobsQuery = useQuery({
     queryKey: ['jobs'],
-    queryFn: () => container.jobRepository.getAllJobs(),
+    queryFn: () => container.jobRepository.getAvailableJobs(),
     staleTime: 3 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
