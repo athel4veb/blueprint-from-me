@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { IPaymentRepository, PaymentSummary, PaymentWithDetails } from '@/domain/repositories/IPaymentRepository';
 import { Payment } from '@/domain/entities/Payment';
@@ -25,7 +24,16 @@ export class SupabasePaymentRepository implements IPaymentRepository {
     if (error) throw error;
 
     return data?.map(payment => ({
-      ...payment,
+      id: payment.id,
+      jobId: payment.job_id,
+      companyId: payment.company_id,
+      promoterId: payment.promoter_id,
+      amount: Number(payment.amount),
+      status: payment.status as 'pending' | 'processing' | 'completed' | 'failed' | 'refunded',
+      paymentMethod: payment.payment_method,
+      stripePaymentIntentId: payment.stripe_payment_intent_id,
+      createdAt: payment.created_at,
+      updatedAt: payment.updated_at,
       jobs: {
         title: payment.jobs.title,
         events: {
