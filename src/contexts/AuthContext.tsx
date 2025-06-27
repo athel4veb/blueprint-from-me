@@ -80,30 +80,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshProfile = async () => {
     if (user?.id) {
-      setLoading(true);
-      try {
-        const profileData = await fetchProfile(user.id, user.email);
-        setProfile(profileData);
-      } catch (error) {
-        console.error('Error refreshing profile:', error);
-      } finally {
-        setLoading(false);
-      }
+      const profileData = await fetchProfile(user.id, user.email);
+      setProfile(profileData);
     }
   };
 
   useEffect(() => {
     console.log('Setting up auth listener...');
     
-    let mounted = true;
-    
-    // Get initial session immediately
-    const initializeAuth = async () => {
+    let isSubscribed = true;
+
+    // Get initial session
+    const getInitialSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('Initial session check:', session?.user?.id, error);
         
-        if (!mounted) return;
+        if (!isSubscribed) return;
         
         if (error) {
           console.error('Error getting initial session:', error);
@@ -116,17 +109,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (session?.user) {
           const profileData = await fetchProfile(session.user.id, session.user.email);
-          if (mounted) {
+          if (isSubscribed) {
             setProfile(profileData);
           }
         }
         
-        if (mounted) {
+        if (isSubscribed) {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error in initializeAuth:', error);
-        if (mounted) {
+        console.error('Error in getInitialSession:', error);
+        if (isSubscribed) {
           setLoading(false);
         }
       }
@@ -137,45 +130,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.id);
         
-        if (!mounted) return;
+        if (!isSubscribed) return;
         
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user && event !== 'TOKEN_REFRESHED') {
-          // Fetch profile for authenticated user
           try {
             const profileData = await fetchProfile(session.user.id, session.user.email);
-            if (mounted) {
+            if (isSubscribed) {
               setProfile(profileData);
             }
           } catch (error) {
             console.error('Error fetching profile in auth state change:', error);
           }
         } else if (!session) {
-          // User signed out
-          if (mounted) {
+          if (isSubscribed) {
             setProfile(null);
           }
         }
         
-        if (mounted && event !== 'TOKEN_REFRESHED') {
+        if (isSubscribed && event !== 'TOKEN_REFRESHED') {
           setLoading(false);
         }
       }
     );
 
-    // Initialize auth
-    initializeAuth();
+    // Initialize
+    getInitialSession();
 
     return () => {
       console.log('Cleaning up auth listener');
-      mounted = false;
-      if (subscription?.unsubscribe) {
-        subscription.unsubscribe();
-      }
+      isSubscribed = false;
+      subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Empty dependency array to run only once
 
   const signOut = async () => {
     try {
