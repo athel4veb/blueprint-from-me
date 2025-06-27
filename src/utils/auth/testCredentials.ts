@@ -7,6 +7,7 @@ export interface TestCredential {
 }
 
 export const testCredentials: TestCredential[] = [
+  { type: 'User', email: 'athel4@hotmail.com', password: 'your_actual_password', description: 'Test Account (Athel)' },
   { type: 'Manager', email: 'sarah.manager@example.com', password: 'password1', description: 'Sarah Manager' },
   { type: 'Supervisor', email: 'mike.supervisor@example.com', password: 'password2', description: 'Mike Supervisor' },
   { type: 'User', email: 'bob@example.com', password: 'password2', description: 'Bob User' },
